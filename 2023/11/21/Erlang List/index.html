@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"agathechristie.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述整理一些erlang list的api">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Erlang list笔记">
+<meta property="og:url" content="https://agathechristie.github.io/2023/11/21/Erlang%20List/index.html">
+<meta property="og:site_name" content="AgatheChristie&#96;s Blog">
+<meta property="og:description" content="概述整理一些erlang list的api">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-11-21T12:18:51.000Z">
+<meta property="article:modified_time" content="2023-11-22T14:01:31.856Z">
+<meta property="article:author" content="AgatheChristie">
+<meta property="article:tag" content="erlang">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://agathechristie.github.io/2023/11/21/Erlang%20List/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Erlang list笔记 | AgatheChristie`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">AgatheChristie`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">清空不必要的</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://agathechristie.github.io/2023/11/21/Erlang%20List/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/cccq.gif">
+      <meta itemprop="name" content="AgatheChristie">
+      <meta itemprop="description" content="你好啊文斯">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AgatheChristie`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Erlang list笔记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-11-21 20:18:51" itemprop="dateCreated datePublished" datetime="2023-11-21T20:18:51+08:00">2023-11-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-11-22 22:01:31" itemprop="dateModified" datetime="2023-11-22T22:01:31+08:00">2023-11-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>整理一些erlang list的api</p>
+<span id="more"></span>
+
+<h2 id="一，带函数Pred"><a href="#一，带函数Pred" class="headerlink" title="一，带函数Pred"></a>一，带函数Pred</h2><h3 id="1-all-Pred-List-boolean"><a href="#1-all-Pred-List-boolean" class="headerlink" title="1, all(Pred, List) -&gt; boolean()"></a>1, all(Pred, List) -&gt; boolean()</h3><p>如果List中的每个元素作为Pred函数的参数执行，结果都返回true，那么all函数返回true，<br>否则返回false</p>
+<p>例子：</p>
+<p>lists:all(fun(E) -&gt; true end,[1,2,3,4]).</p>
+<p>结果</p>
+<p>true</p>
+<h3 id="2-any-Pred-List-boolean"><a href="#2-any-Pred-List-boolean" class="headerlink" title="2, any(Pred, List) -&gt; boolean()"></a>2, any(Pred, List) -&gt; boolean()</h3><p>如果List中至少有一个元素作为Pred函数的参数执行，结果返回true，那么any函数返回true，<br>否则返回false</p>
+<p>例子</p>
+<p>lists:any(fun(E) -&gt; is_integer(E) end,[q,2,a,4]).</p>
+<p>结果</p>
+<p>true</p>
+<h3 id="3，dropwhile-Pred-List1-List2"><a href="#3，dropwhile-Pred-List1-List2" class="headerlink" title="3，dropwhile(Pred, List1) -&gt; List2"></a>3，dropwhile(Pred, List1) -&gt; List2</h3><p>将List1列表中的元素作为参数执行Pred函数，如果返回true，将其丢弃，最后返回剩余元素<br>组成的列表</p>
+<p>例子</p>
+<p>lists:dropwhile(fun(E) -&gt; is_atom(E) end,[a,1,2,a,b]).</p>
+<p>结果</p>
+<p>[1,2,a,b]</p>
+<h3 id="4，filter-Pred-List1-List2"><a href="#4，filter-Pred-List1-List2" class="headerlink" title="4，filter(Pred, List1) -&gt; List2"></a>4，filter(Pred, List1) -&gt; List2</h3><p>返回一个列表，这个列表是由List1中执行Pred函数返回true的元素组成。</p>
+<p>lists:filter(fun(E) -&gt; is_integer(E) end,[q,2,a,4]).</p>
+<p>结果：</p>
+<p>[2,4]</p>
+<h3 id="5，map-Fun-List1-List2"><a href="#5，map-Fun-List1-List2" class="headerlink" title="5，map(Fun, List1) -&gt; List2"></a>5，map(Fun, List1) -&gt; List2</h3><p>将List1中的每个元素去在Fun中执行，然后返回一个元素，最后返回的这些元素组成一个列表，<br>返回给List2<br>例子：<br>lists:map(fun(X)-&gt;[X,X] end, [a,b,c]).<br>结果：[[a,a],[b,b],[c,c]]</p>
+<h3 id="6，flatmap-Fun-List1-List2"><a href="#6，flatmap-Fun-List1-List2" class="headerlink" title="6，flatmap(Fun, List1) -&gt; List2"></a>6，flatmap(Fun, List1) -&gt; List2</h3><p>这个函数和map比较类似，相当于执行了<br>lists:append(lists:map(List1)).<br>也就是把map的结果进行append处理<br>例子：<br>lists:flatmap(fun(X)-&gt;[X,X] end, [a,b,c]).<br>结果：[a,a,b,b,c,c]</p>
+<h3 id="7，foldl-Fun-Acc0-List-Acc1"><a href="#7，foldl-Fun-Acc0-List-Acc1" class="headerlink" title="7，foldl(Fun, Acc0, List) -&gt; Acc1"></a>7，foldl(Fun, Acc0, List) -&gt; Acc1</h3><p>Fun这个函数有两个参数<br>第一个参数是List中的元素，第二个参数是Fun函数执行完后的返回值，这个参数第一次执行时</p>
+<p>就是Acc0</p>
+<p>感觉原文这里表达有点问题，比较适合的说法应该是当List为空后，返回值是AccN（第二个参数），</p>
+<p>lists：foldl源码：</p>
+<p>foldl(F, Accu, [Hd|Tail]) -&gt;<br>foldl(F, F(Hd, Accu), Tail);<br>foldl(F, Accu, []) when is_function(F, 2) -&gt; Accu.</p>
+<p>例子：对[1,2,3,4,5]求和<br>lists:foldl(fun(X, Sum) -&gt; X + Sum end, 0, [1,2,3,4,5]).<br>结果：15<br>执行过程：首先，Fun第一次执行时，X的值取列表List的第一个元素1，Sum取0,<br>Fun第二次执行时，X的值取列表List的第二个元素2，Sum取Fun第一次的返回值<br>依次轮推，直到List中每个元素执行完，最后foldl返回最后一次的结果。</p>
+<h3 id="8，foldr-Fun-Acc0-List-Acc1"><a href="#8，foldr-Fun-Acc0-List-Acc1" class="headerlink" title="8，foldr(Fun, Acc0, List) -&gt; Acc1"></a>8，foldr(Fun, Acc0, List) -&gt; Acc1</h3><p>foldr这个函数和foldl比较相似<br>不过是Fun执行时，X的值先取List的最后一个，然后取倒数第二个。</p>
+<h3 id="9，foreach-Fun-List-ok"><a href="#9，foreach-Fun-List-ok" class="headerlink" title="9，foreach(Fun, List) -&gt; ok"></a>9，foreach(Fun, List) -&gt; ok</h3><p>以List中的每个元素为参数执行Fun函数，执行顺序按照List中元素的顺序，这个函数最后返回ok。是单边的<br>例子 lists:foreach(fun(X)-&gt;<br>%%using X to do somethings<br>%%<br>end,List)</p>
+<h3 id="10，keymap-Fun-N-TupleList1-TupleList2"><a href="#10，keymap-Fun-N-TupleList1-TupleList2" class="headerlink" title="10，keymap(Fun, N, TupleList1) -&gt; TupleList2"></a>10，keymap(Fun, N, TupleList1) -&gt; TupleList2</h3><p>对TupleList1中的每个元素的第N项作为参数在Fun中处理，然后这个第N项最后就被替换为Fun执行完返回的值<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”}].<br>lists:keymap(fun(X)-&gt;<br>list_to_atom(X)<br>end,2,List1).<br>结果：<br>[{name,zhangjing},{name,zhangsan}]</p>
+<h3 id="11，mapfoldl-Fun-Acc0-List1-List2-Acc1"><a href="#11，mapfoldl-Fun-Acc0-List1-List2-Acc1" class="headerlink" title="11，mapfoldl(Fun, Acc0, List1) -&gt; {List2, Acc1}"></a>11，mapfoldl(Fun, Acc0, List1) -&gt; {List2, Acc1}</h3><p>这个函数等于是把map和foldl函数结合起来。将List1中的每一个元素执行Fun函数，执行后花括号的第一个值作为返回值返回，<br>第二个值作为参数传给Fun，作为下一次用。<br>例子：<br>lists:mapfoldl(fun(X, Sum) -&gt; {2*X, X+Sum} end,<br>0, [1,2,3,4,5]).<br>{[2,4,6,8,10],15}</p>
+<h3 id="12，mapfoldr-Fun-Acc0-List1-List2-Acc1"><a href="#12，mapfoldr-Fun-Acc0-List1-List2-Acc1" class="headerlink" title="12，mapfoldr(Fun, Acc0, List1) -&gt; {List2, Acc1}"></a>12，mapfoldr(Fun, Acc0, List1) -&gt; {List2, Acc1}</h3><p>这个函数相当于将map和foldr结合起来</p>
+<h3 id="13，merge-Fun-List1-List2-List3"><a href="#13，merge-Fun-List1-List2-List3" class="headerlink" title="13，merge(Fun, List1, List2) -&gt; List3"></a>13，merge(Fun, List1, List2) -&gt; List3</h3><p>这个函数的功能也是把List1和List2合并到一起，只不过是List1和List2的元素要作为参数在Fun中执行，如果<br>Fun返回true，那么返回值就是List1在前，List2在后。否则，反之。<br>例子<br>lists:merge(fun(A,B)-&gt; false end, [3,4],[2,1]).<br>结果<br>[2,1,3,4]</p>
+<h3 id="14，partition-Pred-List-Satisfying-NotSatisfying"><a href="#14，partition-Pred-List-Satisfying-NotSatisfying" class="headerlink" title="14，partition(Pred, List) -&gt; {Satisfying, NotSatisfying}"></a>14，partition(Pred, List) -&gt; {Satisfying, NotSatisfying}</h3><p>这个函数的功能是将List分成两个List1和List2，List1是将List元素作为参数去Pred函数中执行返回true的元素组成，<br>List2由Pred返回false的元素组成。<br>注意，返回的是一个元组<br>例子<br>lists:partition(fun(A) -&gt; A rem 2 &#x3D;&#x3D; 1 end, [1,2,3,4,5,6,7]).<br>结果<br>{[1,3,5,7],[2,4,6]}</p>
+<h3 id="15，sort-Fun-List1-List2"><a href="#15，sort-Fun-List1-List2" class="headerlink" title="15，sort(Fun, List1) -&gt; List2"></a>15，sort(Fun, List1) -&gt; List2</h3><p>如果Fun函数返回true，则排序是从小到大的顺序，否则，从大到小。<br>其中Fun有两个参数。<br>例子<br>lists:sort(fun(A,B)-&gt; false end,[1,2,3]).<br>结果<br>[3,2,1]</p>
+<h3 id="16，splitwith-Pred-List-List1-List2"><a href="#16，splitwith-Pred-List-List1-List2" class="headerlink" title="16，splitwith(Pred, List) -&gt; {List1, List2}"></a>16，splitwith(Pred, List) -&gt; {List1, List2}</h3><p>将List分成List1和List2，<br>List1由List中元素在Pred函数返回true的组成，但是有一点，如果遇到为false的，则将剩下的元素<br>全部放到List2中，List1中就只有前面为true的。<br>例子<br>lists:splitwith(fun(A) -&gt; is_atom(A) end, [a,b,1,c,d,2,3,4,e]).<br>结果<br>{[a,b],[1,c,d,2,3,4,e]}</p>
+<h3 id="17，takewhile-Pred-List1-List2"><a href="#17，takewhile-Pred-List1-List2" class="headerlink" title="17，takewhile(Pred, List1) -&gt; List2"></a>17，takewhile(Pred, List1) -&gt; List2</h3><p>List1中的元素element依次执行Pred(element),如果返回true，则获取这个元素，直到有元素执行Pred(element)返回false<br>例子<br>lists:takewhile(fun(E)-&gt; is_atom(E) end,[a,b,1,e,{c},[d]]).<br>结果<br>[a,b]</p>
+<h3 id="18-umerge-Fun-List1-List2-List3"><a href="#18-umerge-Fun-List1-List2-List3" class="headerlink" title="18,umerge(Fun, List1, List2) -&gt; List3"></a>18,umerge(Fun, List1, List2) -&gt; List3</h3><p>这个函数和merge不同的是 当Fun返回true时，返回的List3中不能出现相同的元素<br>疑问：但是当Fun返回false时，List3中可以有相同的元素。<br>例子(Fun返回true的情况)<br>lists:umerge(fun(A,B)-&gt; true end,[1,2],[2,3]).<br>结果<br>[1,2,3]<br>(Fun为false的情况)<br>lists:umerge(fun(A,B)-&gt; false end,[1,2],[2,3]).<br>[2,3,1,2]<br>好神奇，竟然2有重复</p>
+<h3 id="19，usort-Fun-List1-List2"><a href="#19，usort-Fun-List1-List2" class="headerlink" title="19，usort(Fun, List1) -&gt; List2"></a>19，usort(Fun, List1) -&gt; List2</h3><p>按照Fun函数进行排序，如果Fun返回true，那么只返回List1的第一个元素<br>如果Fun返回false，那么List1从大到小排序<br>例子1<br>lists:usort(fun(A,B) -&gt; true end, [1,2,2,3,4]).<br>结果<br>[1]</p>
+<p>例子2<br>lists:usort(fun(A,B) -&gt; false end, [1,2,2,3,4]).<br>结果<br>[4,3,2,2,1]</p>
+<h3 id="20，zipwith-Combine-List1-List2-List3"><a href="#20，zipwith-Combine-List1-List2-List3" class="headerlink" title="20，zipwith(Combine, List1, List2) -&gt; List3"></a>20，zipwith(Combine, List1, List2) -&gt; List3</h3><p>将List1和list2中的每个元素执行Combine函数，然后返回一个元素，List3就是由Combine函数返回的一个个元素组成的。<br>功能和map有点像，但是这里是对两个列表的操作。<br>例子<br>lists:zipwith(fun(X, Y) -&gt; X+Y end, [1,2,3], [4,5,6]).<br>结果<br>[5,7,9]</p>
+<h3 id="21，zipwith3-Combine-List1-List2-List3-List4"><a href="#21，zipwith3-Combine-List1-List2-List3-List4" class="headerlink" title="21，zipwith3(Combine, List1, List2, List3) -&gt; List4"></a>21，zipwith3(Combine, List1, List2, List3) -&gt; List4</h3><p>将List1和list2，list3中的每个元素执行Combine函数，然后返回一个元素，List4就是由Combine函数返回的一个个元素组成的。<br>功能和map有点像，但是这里是对三个列表的操作。<br>例子<br>lists:zipwith3(fun(X, Y, Z) -&gt; X+Y+Z end, [1,2,3], [4,5,6],[7,8,9]).<br>结果<br>[12,15,18]</p>
+<h2 id="二，不带函数Pred"><a href="#二，不带函数Pred" class="headerlink" title="二，不带函数Pred"></a>二，不带函数Pred</h2><h3 id="1，append-ListOfLists-List1"><a href="#1，append-ListOfLists-List1" class="headerlink" title="1，append(ListOfLists) -&gt; List1"></a>1，append(ListOfLists) -&gt; List1</h3><p>ListOfLists都是由List组成的，而List一个列表，里面可以是任何类型的元素<br>这个函数就是将ListOfLists里面的所有列表的元素按顺序编成一个列表<br>提示：ListOfLists里面的元素必须都是列表才能用这个函数</p>
+<p>例子</p>
+<p>lists:append([[1, 2, 3], [a, b], [4, 5, 6]]).</p>
+<p>结果：</p>
+<p>[1,2,3,a,b,4,5,6]</p>
+<h3 id="2，append-List1-List2-List3"><a href="#2，append-List1-List2-List3" class="headerlink" title="2，append(List1, List2) -&gt; List3"></a>2，append(List1, List2) -&gt; List3</h3><p>将List1和List2两个列表连接起来，组成一个列表，然后返回新的这个列表<br>这个函数的功能等同于List1 ++ List2</p>
+<p>例子</p>
+<p>lists:append(“abc”, “def”).</p>
+<p>结果</p>
+<p>“abcdef”</p>
+<h3 id="3，concat-Things-string"><a href="#3，concat-Things-string" class="headerlink" title="3，concat(Things) -&gt; string()"></a>3，concat(Things) -&gt; string()</h3><p>这里的Things是一个列表，里面由atom() | integer() | float() | string()<br>将这个列表里面的元素拼成一个字符串，然后返回</p>
+<p>例子</p>
+<p>lists:concat([doc, ‘&#x2F;‘, file, ‘.’, 3]).</p>
+<p>结果</p>
+<p>doc&#x2F;file.3”</p>
+<h3 id="4，delete-Elem-List1-List2"><a href="#4，delete-Elem-List1-List2" class="headerlink" title="4，delete(Elem, List1) -&gt; List2"></a>4，delete(Elem, List1) -&gt; List2</h3><p>List1是由很多Element组成的，这个函数的功能是在List1中寻找第一个和Elem元素一样的，<br>然后删除之，返回删除后新的列表。</p>
+<p>例子</p>
+<p>lists:delete({name,”zhangsan”},[{name,”lisi”},{name,”zhangsan”},{name,”wangmazi”})).</p>
+<p>结果</p>
+<p>[{name,”lisi”},{name,”wangmazi”}]</p>
+<h3 id="5，duplicate-N-Elem-List"><a href="#5，duplicate-N-Elem-List" class="headerlink" title="5，duplicate(N, Elem) -&gt; List"></a>5，duplicate(N, Elem) -&gt; List</h3><p>返回一个由N个Elem组成的列表。</p>
+<p>例子</p>
+<p>lists:duplicate(5,”test”).</p>
+<p>结果</p>
+<p>[“test”,”test”,”test”,”test”,”test”]</p>
+<h3 id="6，flatlength-DeepList-integer-0"><a href="#6，flatlength-DeepList-integer-0" class="headerlink" title="6，flatlength(DeepList) -&gt; integer() &gt;&#x3D; 0"></a>6，flatlength(DeepList) -&gt; integer() &gt;&#x3D; 0</h3><p>我的理解是DeepList就是列表里面套列表<br>计算列表的长度，即用flatten函数将DeepList转化成List后元素的个数<br>这个函数和length()的区别就是：<br>length函数是得到列表元素的个数，<br>而flatlength函数是先将DeepList转化成List后的个数<br>譬如说List &#x3D; [1,2,[3,4]]这个列表用<br>length(List)求的值是：3<br>lists:flatlength(List)求的值是：4<br>其实lists:flatlength(List) &#x3D; length(flatten(List))</p>
+<h3 id="7，flatten-DeepList-List"><a href="#7，flatten-DeepList-List" class="headerlink" title="7，flatten(DeepList) -&gt; List"></a>7，flatten(DeepList) -&gt; List</h3><p>将DeepList变成只有term()的list<br>例子：<br>lists:flatten([[a,a],[b,b],[c,c]]).<br>结果：<br>[a,a,b,b,c,c]</p>
+<h3 id="8，flatten-DeepList-Tail-List"><a href="#8，flatten-DeepList-Tail-List" class="headerlink" title="8，flatten(DeepList, Tail) -&gt; List"></a>8，flatten(DeepList, Tail) -&gt; List</h3><p>就是将DeepList变成只有term的List后，在后面再加一个Tail。<br>例子：<br>lists:flatten([[a,a],[b,b],[c,c]],[dd]).<br>结果：<br>[a,a,b,b,c,c,dd]</p>
+<h3 id="9-keydelete-Key-N-TupleList1-TupleList2"><a href="#9-keydelete-Key-N-TupleList1-TupleList2" class="headerlink" title="9,keydelete(Key, N, TupleList1) -&gt; TupleList2"></a>9,keydelete(Key, N, TupleList1) -&gt; TupleList2</h3><p>这个函数适合处理列表里面的元素是元组的情况<br>删除TupleList1中元素第N个元素和Key一致的元素，只删除第一个一样的，后面一样的不删除<br>例子：<br>List &#x3D; [{name,”zhangjing”},{sex,”male”},{name,”zhangsan”},{sex,”male”}],<br>lists:keydelete(“male”,2,List)<br>结果：<br>[{name,”zhangjing”},{name,”zhangsan”},{sex,”male”}]</p>
+<h3 id="10-keyfind-Key-N-TupleList-Tuple-false"><a href="#10-keyfind-Key-N-TupleList-Tuple-false" class="headerlink" title="10,keyfind(Key, N, TupleList) -&gt; Tuple | false"></a>10,keyfind(Key, N, TupleList) -&gt; Tuple | false</h3><p>查找TupleList中的一个Tuple，如果查找到，返回，如果没有查找到，则返回false<br>这个Tuple必须满足第N个元素和key是一样。<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”}].<br>lists:keyfind(“zhangjing”,2,List1)<br>结果：{name,”zhangjing”}</p>
+<h3 id="11，keymember-Key-N-TupleList-boolean"><a href="#11，keymember-Key-N-TupleList-boolean" class="headerlink" title="11，keymember(Key, N, TupleList) -&gt; boolean()"></a>11，keymember(Key, N, TupleList) -&gt; boolean()</h3><p>如果TupleList中的元素中存在第N个元素和key一致，则返回true，否则返回false<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”}].<br>lists:keymember(“zhangjing”,2,List1).<br>结果：true</p>
+<h3 id="12，keymerge-N-TupleList1-TupleList2-TupleList3"><a href="#12，keymerge-N-TupleList1-TupleList2-TupleList3" class="headerlink" title="12，keymerge(N, TupleList1, TupleList2) -&gt; TupleList3"></a>12，keymerge(N, TupleList1, TupleList2) -&gt; TupleList3</h3><p>将TupleList1和TupleList2进行混合，组成一个TupleList，<br>新组成的TupleList是按照Tuple的第N个元素进行排序的<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”}].<br>List2 &#x3D; [{nick,”zj”},{nick,”zs”}].<br>lists:keymerge(2,List1,List2).<br>结果：<br>[{name,”zhangjing”},<br>{name,”zhangsan”},<br>{nick,”zj”},<br>{nick,”zs”}]</p>
+<h3 id="13，keyreplace-Key-N-TupleList1-NewTuple-TupleList2"><a href="#13，keyreplace-Key-N-TupleList1-NewTuple-TupleList2" class="headerlink" title="13，keyreplace(Key, N, TupleList1, NewTuple) -&gt; TupleList2"></a>13，keyreplace(Key, N, TupleList1, NewTuple) -&gt; TupleList2</h3><p>在TupleList1的Tuple中找出第N个元素和Key一致，然后用NewTuple将这个Tuple替换掉，如果没有找到<br>，则返回原来的TupleList1<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”}]<br>lists:keyreplace(“zhangjing”,2,List1,{nickname,”netzj”}).<br>结果：<br>[{nickname,”netzj”},{name,”zhangsan”}]</p>
+<h3 id="14，keysearch-Key-N-TupleList-value-Tuple-false"><a href="#14，keysearch-Key-N-TupleList-value-Tuple-false" class="headerlink" title="14，keysearch(Key, N, TupleList) -&gt; {value, Tuple} | false"></a>14，keysearch(Key, N, TupleList) -&gt; {value, Tuple} | false</h3><p>这个函数和keyfind差不多，就是返回值的结构不一样<br>也是在TupleList中找一个Tuple，这个Tuple的第N个元素和Key一样。<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”}]<br>lists:keysearch(“zhangjing”,2,List1).<br>结果：<br>{value,{name,”zhangjing”}}</p>
+<h3 id="15，keysort-N-TupleList1-TupleList2"><a href="#15，keysort-N-TupleList1-TupleList2" class="headerlink" title="15，keysort(N, TupleList1) -&gt; TupleList2"></a>15，keysort(N, TupleList1) -&gt; TupleList2</h3><p>对TupleList1中的Tuple按照第N个元素进行排序，然后返回一个新的顺序的TupleList。<br>不过这种排序是固定的。<br>例子：<br>List1 &#x3D; [{name,”zhangsan”},{name,”zhangjing”}].<br>lists:keysort(2,List1).<br>结果：<br>[{name,”zhangjing”},{name,”zhangsan”}]</p>
+<h3 id="16，keystore-Key-N-TupleList1-NewTuple-TupleList2"><a href="#16，keystore-Key-N-TupleList1-NewTuple-TupleList2" class="headerlink" title="16，keystore(Key, N, TupleList1, NewTuple) -&gt; TupleList2"></a>16，keystore(Key, N, TupleList1, NewTuple) -&gt; TupleList2</h3><p>这个函数和keyreplace函数比较像，不同的是，这个keystore在没有找到对应的Tuple时，<br>会将这个NewTuple追加在这个TupleList1的最后。<br>例子：<br>List1 &#x3D; [{name,”zhangsan”},{name,”zhangjing”}].<br>找到了的情况<br>lists:keystore(“zhangjing”,2,List1,{name,”netzhangjing”}).<br>[{name,”netzhangjing”},{name,”zhangsan”}]<br>没有找到的情况<br>lists:keystore(“zhanging”,2,List1,{name,”netzhangjing”}).<br>[{name,”zhangjing”},{name,”zhangsan”},{name,”netzhangjing”}]</p>
+<h3 id="17，keytake-Key-N-TupleList1-value-Tuple-TupleList2-false"><a href="#17，keytake-Key-N-TupleList1-value-Tuple-TupleList2-false" class="headerlink" title="17，keytake(Key, N, TupleList1) -&gt; {value, Tuple, TupleList2} | false"></a>17，keytake(Key, N, TupleList1) -&gt; {value, Tuple, TupleList2} | false</h3><p>在TupleList1中找Tuple，这个Tuple的第N个元素和Key一致，如果找到了这么一个Tuple<br>那么返回，{value, Tuple, TupleList2} 其中TupleList2是去掉Tuple的TupleList1.<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”},{name,”lisi”}].<br>lists:keytake(“zhangjing”,2,List1).<br>结果：<br>{value,{name,”zhangjing”},[{name,”zhangsan”},{name,”lisi”}]}</p>
+<h3 id="18，last-List-Last"><a href="#18，last-List-Last" class="headerlink" title="18，last(List) -&gt; Last"></a>18，last(List) -&gt; Last</h3><p>返回：List最后一个元素<br>例子：<br>List1 &#x3D; [{name,”zhangjing”},{name,”zhangsan”},{name,”lisi”}].<br>lists:last(List1).<br>结果：<br>{name,”lisi”}</p>
+<h3 id="19，max-List-Max"><a href="#19，max-List-Max" class="headerlink" title="19，max(List) -&gt; Max"></a>19，max(List) -&gt; Max</h3><p>取出List中最大的元素，一般List是整型时比较适合。<br>例子：<br>lists:max([1,10,15,6]).<br>结果：<br>15</p>
+<h3 id="20，member-Elem-List-boolean"><a href="#20，member-Elem-List-boolean" class="headerlink" title="20，member(Elem, List) -&gt; boolean()"></a>20，member(Elem, List) -&gt; boolean()</h3><p>如果Elem和List中的某个元素匹配（相同），那么返回true，否则返回false<br>例子<br>lists:member({sex,”1”},[{sex,”1”},{sex,”2”},{sex,”3”}]).<br>结果：<br>true</p>
+<h3 id="21，merge-ListOfLists-List1"><a href="#21，merge-ListOfLists-List1" class="headerlink" title="21，merge(ListOfLists) -&gt; List1"></a>21，merge(ListOfLists) -&gt; List1</h3><p>ListOfLists是一个列表，里面由子列表构成<br>这个函数的功能就是将这些子列表合并成一个列表。<br>例子：<br>lists:merge([[{11}],[{22}],[{33}]]).<br>结果<br>[{11},{22},{33}]</p>
+<h3 id="22，merge-List1-List2-List3"><a href="#22，merge-List1-List2-List3" class="headerlink" title="22，merge(List1, List2) -&gt; List3"></a>22，merge(List1, List2) -&gt; List3</h3><p>List1和List2分别是一个列表，这个函数的功能是将这两个列表合并成一个列表。<br>例子：<br>lists:merge([11],[22]).<br>结果<br>[11,22]</p>
+<h3 id="23-merge3-List1-List2-List3-List4"><a href="#23-merge3-List1-List2-List3-List4" class="headerlink" title="23, merge3(List1, List2, List3) -&gt; List4"></a>23, merge3(List1, List2, List3) -&gt; List4</h3><p>将List1，List2，List3合并成一个列表<br>例子<br>lists:merge3([11],[22],[33,44]).<br>结果：<br>[11,22,33,44]</p>
+<h3 id="24，min-List-Min"><a href="#24，min-List-Min" class="headerlink" title="24，min(List) -&gt; Min"></a>24，min(List) -&gt; Min</h3><p>返回List中的最小的元素，和max函数对应<br>例子<br>lists:min([1,2,3]).<br>结果<br>1</p>
+<h3 id="25，nth-N-List-Elem"><a href="#25，nth-N-List-Elem" class="headerlink" title="25，nth(N, List) -&gt; Elem"></a>25，nth(N, List) -&gt; Elem</h3><p>返回List中的第N个元素。<br>例子<br>lists:nth(2,[{name,”zhangsan”},{name,”lisi”},{name,”wangmazi”}]).<br>结果<br>{name,”lisi”}</p>
+<h3 id="26，nthtail-N-List-Tail"><a href="#26，nthtail-N-List-Tail" class="headerlink" title="26，nthtail(N, List) -&gt; Tail"></a>26，nthtail(N, List) -&gt; Tail</h3><p>返回List列表中第N个元素后面的元素<br>例子<br>lists:nthtail(3, [a, b, c, d, e]).<br>结果<br>[d,e]</p>
+<h3 id="27，prefix-List1-List2-boolean"><a href="#27，prefix-List1-List2-boolean" class="headerlink" title="27，prefix(List1, List2) -&gt; boolean()"></a>27，prefix(List1, List2) -&gt; boolean()</h3><p>如果List1是List2的前缀(也就是说List1和List2前部分相同)，<br>那么返回true，否则返回false</p>
+<h3 id="28，reverse-List1-List2"><a href="#28，reverse-List1-List2" class="headerlink" title="28，reverse(List1) -&gt; List2"></a>28，reverse(List1) -&gt; List2</h3><p>将List1反转<br>例子<br>lists:reverse([1,2,3,4]).<br>结果<br>[4,3,2,1]</p>
+<h3 id="29-reverse-List1-Tail-List2"><a href="#29-reverse-List1-Tail-List2" class="headerlink" title="29,reverse(List1, Tail) -&gt; List2"></a>29,reverse(List1, Tail) -&gt; List2</h3><p>将List1反转，然后将Tail接在反转List1的后面，然后返回<br>例子<br>lists:reverse([1, 2, 3, 4], [a, b, c]).<br>[4,3,2,1,a,b,c]</p>
+<h3 id="30，seq-From-To-Seq"><a href="#30，seq-From-To-Seq" class="headerlink" title="30，seq(From, To) -&gt; Seq"></a>30，seq(From, To) -&gt; Seq</h3><p>其中From和To都是整型，这个函数返回一个从From到To的一个整型列表。<br>例子<br>lists:seq(1,10).<br>结果<br>[1,2,3,4,5,6,7,8,9,10]</p>
+<h3 id="31，seq-From-To-Incr-Seq"><a href="#31，seq-From-To-Incr-Seq" class="headerlink" title="31，seq(From, To, Incr) -&gt; Seq"></a>31，seq(From, To, Incr) -&gt; Seq</h3><p>返回一个整型列表，这个列表的后一个元素比前一个元素大Incr。<br>例子<br>lists:seq(1,10,4).<br>[1,5,9]</p>
+<h3 id="32，sort-List1-List2"><a href="#32，sort-List1-List2" class="headerlink" title="32，sort(List1) -&gt; List2"></a>32，sort(List1) -&gt; List2</h3><p>将List1中的元素从小到大排序，然后返回新的一个列表。<br>例子<br>lists:sort([3,2,1]).<br>结果<br>[1,2,3]</p>
+<h3 id="33，split-N-List1-List2-List3"><a href="#33，split-N-List1-List2-List3" class="headerlink" title="33，split(N, List1) -&gt; {List2, List3}"></a>33，split(N, List1) -&gt; {List2, List3}</h3><p>将List1分成List2和List3<br>其中List2包括List1的前N个元素，List3包含剩余的。<br>例子<br>lists:split(3,[1,2,3,4,5]).<br>结果<br>{[1,2,3],[4,5]}</p>
+<p>这个函数和partition数有区别，partition是遍历全部的List，而splitwith在遍历时遇到false的情况<br>则马上结束遍历，返回结果。</p>
+<h3 id="34，sublist-List1-Len-List2"><a href="#34，sublist-List1-Len-List2" class="headerlink" title="34，sublist(List1, Len) -&gt; List2"></a>34，sublist(List1, Len) -&gt; List2</h3><p>返回从第一个元素到第Len个元素的列表，这个Len大于List1的长度时，返回全部。<br>例子<br>lists:sublist([1,2,3,4,5,6],3).<br>结果<br>[1,2,3]</p>
+<h3 id="35，sublist-List1-Start-Len-List2"><a href="#35，sublist-List1-Start-Len-List2" class="headerlink" title="35，sublist(List1, Start, Len) -&gt; List2"></a>35，sublist(List1, Start, Len) -&gt; List2</h3><p>返回从List1的第Start个位置开始，后面Len个元素的列表。<br>例子<br>lists:sublist([1,2,3,4], 2, 2).<br>结果<br>[2,3]</p>
+<h3 id="36，subtract-List1-List2-List3"><a href="#36，subtract-List1-List2-List3" class="headerlink" title="36，subtract(List1, List2) -&gt; List3"></a>36，subtract(List1, List2) -&gt; List3</h3><p>等同于 List1 – List2<br>这个函数功能是返回一个List1的副本，对于List2中的每个元素，第一次在List1副本中出现时被删掉。<br>例子<br>lists:subtract(“112233”,”12”).<br>结果<br>“1233”</p>
+<h3 id="37，suffix-List1-List2-boolean"><a href="#37，suffix-List1-List2-boolean" class="headerlink" title="37，suffix(List1, List2) -&gt; boolean()"></a>37，suffix(List1, List2) -&gt; boolean()</h3><p>如果List1是List2的后缀，那么返回true，否则返回false<br>例子<br>lists:suffix(“22”,”1122”).<br>结果<br>true</p>
+<h3 id="38，sum-List-number"><a href="#38，sum-List-number" class="headerlink" title="38，sum(List) -&gt; number()"></a>38，sum(List) -&gt; number()</h3><p>返回List中每个元素的和。其中List中的元素都应该是number()类型的。<br>例子<br>lists:sum([1,2,3,4]).<br>结果<br>10</p>
+<h3 id="39，ukeymerge-N-TupleList1-TupleList2-TupleList3"><a href="#39，ukeymerge-N-TupleList1-TupleList2-TupleList3" class="headerlink" title="39，ukeymerge(N, TupleList1, TupleList2) -&gt; TupleList3"></a>39，ukeymerge(N, TupleList1, TupleList2) -&gt; TupleList3</h3><p>TupleList1和TupleList2里面的元素都是元组<br>将TupleList1和TupleList2合并，合并的规则是按照元组的第N个元素，如果第N个元素有相同的，那么保留TupleList1中<br>的，删除TupleList2中的。</p>
+<h3 id="40，ukeysort-N-TupleList1-TupleList2"><a href="#40，ukeysort-N-TupleList1-TupleList2" class="headerlink" title="40，ukeysort(N, TupleList1) -&gt; TupleList2"></a>40，ukeysort(N, TupleList1) -&gt; TupleList2</h3><p>TupleList1里面的元素都是元组<br>这个函数也同样返回一个元素是元组的列表，返回的这个列表是按照元组的第N个元素来排序的，如果元组中有出现<br>第N个元素相同的情况，删除掉后面的一个元组。<br>例子<br>lists:ukeysort(1,[{name,”zhangsan”},{sex,”male”},{name,”himan”}]).<br>结果<br>[{name,”zhangsan”},{sex,”male”}]</p>
+<h3 id="41，umerge-ListOfLists-List1"><a href="#41，umerge-ListOfLists-List1" class="headerlink" title="41，umerge(ListOfLists) -&gt; List1"></a>41，umerge(ListOfLists) -&gt; List1</h3><p>这个函数和merge唯一不同的就是，里面不能出现相同的元素，如果出现相同的，那么删除之，只保留一个唯一的<br>例子<br>lists:umerge([[1,2],[2,3]]).<br>结果<br>[1,2,3]<br>分析：由于[[1,2],[2,3]]中merge后是[1,2,2,3],这个时候有两个相同的元素2，所以只保存一个2，所以结果是[1,2,3].</p>
+<h3 id="42，umerge3-List1-List2-List3-List4"><a href="#42，umerge3-List1-List2-List3-List4" class="headerlink" title="42，umerge3(List1, List2, List3) -&gt; List4"></a>42，umerge3(List1, List2, List3) -&gt; List4</h3><p>将List1, List2, List3合并<br>和merge3不同的是返回的List4中不能出现重复的元素<br>例子<br>lists:merge3([1,2],[2,3],[3,4]).<br>结果<br>[1,2,3,4]</p>
+<h3 id="43，unzip-List1-List2-List3"><a href="#43，unzip-List1-List2-List3" class="headerlink" title="43，unzip(List1) -&gt; {List2, List3}"></a>43，unzip(List1) -&gt; {List2, List3}</h3><p>List1里面的元素是元组，每个元组由两个元素组成，返回值List2包含每个List1中每个元组的第一个元素<br>返回值List3包含每个List1中每个元组的第二个元素。<br>例子<br>lists:unzip([{name,”zhangsan”},{sex,”male”},{city,”hangzhou”}]).<br>结果<br>{[name,sex,city],[“zhangsan”,”male”,”hangzhou”]}</p>
+<h3 id="44，unzip3-List1-List2-List3-List4"><a href="#44，unzip3-List1-List2-List3-List4" class="headerlink" title="44，unzip3(List1) -&gt; {List2, List3, List4}"></a>44，unzip3(List1) -&gt; {List2, List3, List4}</h3><p>List1里面的元素是元组，每个元组由三个元素组成，返回值List2包含每个List1中每个元组的第一个元素；<br>返回值List3包含每个List1中每个元组的第二个元素；返回值List4包含每个List1中每个元组的第三个元素。<br>例子<br>lists:unzip3([{name,”zhangsan”,”apple”},{sex,”male”,”banana”},{city,”hangzhou”,”orange”}]).<br>结果<br>{[name,sex,city],<br>[“zhangsan”,”male”,”hangzhou”],<br>[“apple”,”banana”,”orange”]}<br>注意，最终返回的是一个元组。</p>
+<h3 id="45，usort-List1-List2"><a href="#45，usort-List1-List2" class="headerlink" title="45，usort(List1) -&gt; List2"></a>45，usort(List1) -&gt; List2</h3><p>将List1按照从小到大的顺序排序，如果排序后有重复的元素，删除重复的，只保存一个唯一的。<br>例子<br>lists:usort([4,3,2,1,2,3,4]).<br>结果<br>[1,2,3,4]</p>
+<h3 id="46，zip-List1-List2-List3"><a href="#46，zip-List1-List2-List3" class="headerlink" title="46，zip(List1, List2) -&gt; List3"></a>46，zip(List1, List2) -&gt; List3</h3><p>将两个长度相同的列表合并成一个列表<br>List3是里面的每一个元组的第一个元素是从List1获取的，而每个元组的第二个元素是从List2中获取的<br>例子<br>lists:zip([name,sex,city],[“zhangsan”,”male”,”hangzhou”]).<br>结果<br>[{name,”zhangsan”},{sex,”male”},{city,”hangzhou”}]<br>注意，如果List1和List2长度不一致，那么这个函数将会报错。</p>
+<h3 id="47，zip3-List1-List2-List3-List4"><a href="#47，zip3-List1-List2-List3-List4" class="headerlink" title="47，zip3(List1, List2, List3) -&gt; List4"></a>47，zip3(List1, List2, List3) -&gt; List4</h3><p>将三个长度相同的列表合并成一个列表<br>List3是里面的每一个元组的第一个元素是从List1获取的，而每个元组的第二个元素是从List2中获取的<br>每个元组的第三个元素是从List3中获取的。<br>例子<br>lists:zip3([name,sex,city],[“zhangsan”,”male”,”hangzhou”],[“nick”,”1”,”zhejiang”]).<br>结果<br>[{name,”zhangsan”,”nick”},<br>{sex,”male”,”1”},<br>{city,”hangzhou”,”zhejiang”}]</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="AgatheChristie 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="AgatheChristie 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>AgatheChristie
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://agathechristie.github.io/2023/11/21/Erlang%20List/" title="Erlang list笔记">https://agathechristie.github.io/2023/11/21/Erlang List/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/erlang/" rel="tag"># erlang</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/11/21/kaishimy/" rel="next" title="hexo+github笔记">
+      hexo+github笔记 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%EF%BC%8C%E5%B8%A6%E5%87%BD%E6%95%B0Pred"><span class="nav-number">1.1.</span> <span class="nav-text">一，带函数Pred</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-all-Pred-List-boolean"><span class="nav-number">1.1.1.</span> <span class="nav-text">1, all(Pred, List) -&gt; boolean()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-any-Pred-List-boolean"><span class="nav-number">1.1.2.</span> <span class="nav-text">2, any(Pred, List) -&gt; boolean()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3%EF%BC%8Cdropwhile-Pred-List1-List2"><span class="nav-number">1.1.3.</span> <span class="nav-text">3，dropwhile(Pred, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4%EF%BC%8Cfilter-Pred-List1-List2"><span class="nav-number">1.1.4.</span> <span class="nav-text">4，filter(Pred, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5%EF%BC%8Cmap-Fun-List1-List2"><span class="nav-number">1.1.5.</span> <span class="nav-text">5，map(Fun, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6%EF%BC%8Cflatmap-Fun-List1-List2"><span class="nav-number">1.1.6.</span> <span class="nav-text">6，flatmap(Fun, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7%EF%BC%8Cfoldl-Fun-Acc0-List-Acc1"><span class="nav-number">1.1.7.</span> <span class="nav-text">7，foldl(Fun, Acc0, List) -&gt; Acc1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8%EF%BC%8Cfoldr-Fun-Acc0-List-Acc1"><span class="nav-number">1.1.8.</span> <span class="nav-text">8，foldr(Fun, Acc0, List) -&gt; Acc1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9%EF%BC%8Cforeach-Fun-List-ok"><span class="nav-number">1.1.9.</span> <span class="nav-text">9，foreach(Fun, List) -&gt; ok</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10%EF%BC%8Ckeymap-Fun-N-TupleList1-TupleList2"><span class="nav-number">1.1.10.</span> <span class="nav-text">10，keymap(Fun, N, TupleList1) -&gt; TupleList2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#11%EF%BC%8Cmapfoldl-Fun-Acc0-List1-List2-Acc1"><span class="nav-number">1.1.11.</span> <span class="nav-text">11，mapfoldl(Fun, Acc0, List1) -&gt; {List2, Acc1}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#12%EF%BC%8Cmapfoldr-Fun-Acc0-List1-List2-Acc1"><span class="nav-number">1.1.12.</span> <span class="nav-text">12，mapfoldr(Fun, Acc0, List1) -&gt; {List2, Acc1}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#13%EF%BC%8Cmerge-Fun-List1-List2-List3"><span class="nav-number">1.1.13.</span> <span class="nav-text">13，merge(Fun, List1, List2) -&gt; List3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#14%EF%BC%8Cpartition-Pred-List-Satisfying-NotSatisfying"><span class="nav-number">1.1.14.</span> <span class="nav-text">14，partition(Pred, List) -&gt; {Satisfying, NotSatisfying}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#15%EF%BC%8Csort-Fun-List1-List2"><span class="nav-number">1.1.15.</span> <span class="nav-text">15，sort(Fun, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#16%EF%BC%8Csplitwith-Pred-List-List1-List2"><span class="nav-number">1.1.16.</span> <span class="nav-text">16，splitwith(Pred, List) -&gt; {List1, List2}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#17%EF%BC%8Ctakewhile-Pred-List1-List2"><span class="nav-number">1.1.17.</span> <span class="nav-text">17，takewhile(Pred, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#18-umerge-Fun-List1-List2-List3"><span class="nav-number">1.1.18.</span> <span class="nav-text">18,umerge(Fun, List1, List2) -&gt; List3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#19%EF%BC%8Cusort-Fun-List1-List2"><span class="nav-number">1.1.19.</span> <span class="nav-text">19，usort(Fun, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#20%EF%BC%8Czipwith-Combine-List1-List2-List3"><span class="nav-number">1.1.20.</span> <span class="nav-text">20，zipwith(Combine, List1, List2) -&gt; List3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#21%EF%BC%8Czipwith3-Combine-List1-List2-List3-List4"><span class="nav-number">1.1.21.</span> <span class="nav-text">21，zipwith3(Combine, List1, List2, List3) -&gt; List4</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%EF%BC%8C%E4%B8%8D%E5%B8%A6%E5%87%BD%E6%95%B0Pred"><span class="nav-number">1.2.</span> <span class="nav-text">二，不带函数Pred</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1%EF%BC%8Cappend-ListOfLists-List1"><span class="nav-number">1.2.1.</span> <span class="nav-text">1，append(ListOfLists) -&gt; List1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2%EF%BC%8Cappend-List1-List2-List3"><span class="nav-number">1.2.2.</span> <span class="nav-text">2，append(List1, List2) -&gt; List3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3%EF%BC%8Cconcat-Things-string"><span class="nav-number">1.2.3.</span> <span class="nav-text">3，concat(Things) -&gt; string()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4%EF%BC%8Cdelete-Elem-List1-List2"><span class="nav-number">1.2.4.</span> <span class="nav-text">4，delete(Elem, List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5%EF%BC%8Cduplicate-N-Elem-List"><span class="nav-number">1.2.5.</span> <span class="nav-text">5，duplicate(N, Elem) -&gt; List</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6%EF%BC%8Cflatlength-DeepList-integer-0"><span class="nav-number">1.2.6.</span> <span class="nav-text">6，flatlength(DeepList) -&gt; integer() &gt;&#x3D; 0</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7%EF%BC%8Cflatten-DeepList-List"><span class="nav-number">1.2.7.</span> <span class="nav-text">7，flatten(DeepList) -&gt; List</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8%EF%BC%8Cflatten-DeepList-Tail-List"><span class="nav-number">1.2.8.</span> <span class="nav-text">8，flatten(DeepList, Tail) -&gt; List</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-keydelete-Key-N-TupleList1-TupleList2"><span class="nav-number">1.2.9.</span> <span class="nav-text">9,keydelete(Key, N, TupleList1) -&gt; TupleList2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-keyfind-Key-N-TupleList-Tuple-false"><span class="nav-number">1.2.10.</span> <span class="nav-text">10,keyfind(Key, N, TupleList) -&gt; Tuple | false</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#11%EF%BC%8Ckeymember-Key-N-TupleList-boolean"><span class="nav-number">1.2.11.</span> <span class="nav-text">11，keymember(Key, N, TupleList) -&gt; boolean()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#12%EF%BC%8Ckeymerge-N-TupleList1-TupleList2-TupleList3"><span class="nav-number">1.2.12.</span> <span class="nav-text">12，keymerge(N, TupleList1, TupleList2) -&gt; TupleList3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#13%EF%BC%8Ckeyreplace-Key-N-TupleList1-NewTuple-TupleList2"><span class="nav-number">1.2.13.</span> <span class="nav-text">13，keyreplace(Key, N, TupleList1, NewTuple) -&gt; TupleList2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#14%EF%BC%8Ckeysearch-Key-N-TupleList-value-Tuple-false"><span class="nav-number">1.2.14.</span> <span class="nav-text">14，keysearch(Key, N, TupleList) -&gt; {value, Tuple} | false</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#15%EF%BC%8Ckeysort-N-TupleList1-TupleList2"><span class="nav-number">1.2.15.</span> <span class="nav-text">15，keysort(N, TupleList1) -&gt; TupleList2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#16%EF%BC%8Ckeystore-Key-N-TupleList1-NewTuple-TupleList2"><span class="nav-number">1.2.16.</span> <span class="nav-text">16，keystore(Key, N, TupleList1, NewTuple) -&gt; TupleList2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#17%EF%BC%8Ckeytake-Key-N-TupleList1-value-Tuple-TupleList2-false"><span class="nav-number">1.2.17.</span> <span class="nav-text">17，keytake(Key, N, TupleList1) -&gt; {value, Tuple, TupleList2} | false</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#18%EF%BC%8Clast-List-Last"><span class="nav-number">1.2.18.</span> <span class="nav-text">18，last(List) -&gt; Last</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#19%EF%BC%8Cmax-List-Max"><span class="nav-number">1.2.19.</span> <span class="nav-text">19，max(List) -&gt; Max</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#20%EF%BC%8Cmember-Elem-List-boolean"><span class="nav-number">1.2.20.</span> <span class="nav-text">20，member(Elem, List) -&gt; boolean()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#21%EF%BC%8Cmerge-ListOfLists-List1"><span class="nav-number">1.2.21.</span> <span class="nav-text">21，merge(ListOfLists) -&gt; List1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#22%EF%BC%8Cmerge-List1-List2-List3"><span class="nav-number">1.2.22.</span> <span class="nav-text">22，merge(List1, List2) -&gt; List3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-merge3-List1-List2-List3-List4"><span class="nav-number">1.2.23.</span> <span class="nav-text">23, merge3(List1, List2, List3) -&gt; List4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#24%EF%BC%8Cmin-List-Min"><span class="nav-number">1.2.24.</span> <span class="nav-text">24，min(List) -&gt; Min</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#25%EF%BC%8Cnth-N-List-Elem"><span class="nav-number">1.2.25.</span> <span class="nav-text">25，nth(N, List) -&gt; Elem</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#26%EF%BC%8Cnthtail-N-List-Tail"><span class="nav-number">1.2.26.</span> <span class="nav-text">26，nthtail(N, List) -&gt; Tail</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#27%EF%BC%8Cprefix-List1-List2-boolean"><span class="nav-number">1.2.27.</span> <span class="nav-text">27，prefix(List1, List2) -&gt; boolean()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#28%EF%BC%8Creverse-List1-List2"><span class="nav-number">1.2.28.</span> <span class="nav-text">28，reverse(List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#29-reverse-List1-Tail-List2"><span class="nav-number">1.2.29.</span> <span class="nav-text">29,reverse(List1, Tail) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#30%EF%BC%8Cseq-From-To-Seq"><span class="nav-number">1.2.30.</span> <span class="nav-text">30，seq(From, To) -&gt; Seq</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#31%EF%BC%8Cseq-From-To-Incr-Seq"><span class="nav-number">1.2.31.</span> <span class="nav-text">31，seq(From, To, Incr) -&gt; Seq</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#32%EF%BC%8Csort-List1-List2"><span class="nav-number">1.2.32.</span> <span class="nav-text">32，sort(List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#33%EF%BC%8Csplit-N-List1-List2-List3"><span class="nav-number">1.2.33.</span> <span class="nav-text">33，split(N, List1) -&gt; {List2, List3}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#34%EF%BC%8Csublist-List1-Len-List2"><span class="nav-number">1.2.34.</span> <span class="nav-text">34，sublist(List1, Len) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#35%EF%BC%8Csublist-List1-Start-Len-List2"><span class="nav-number">1.2.35.</span> <span class="nav-text">35，sublist(List1, Start, Len) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#36%EF%BC%8Csubtract-List1-List2-List3"><span class="nav-number">1.2.36.</span> <span class="nav-text">36，subtract(List1, List2) -&gt; List3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#37%EF%BC%8Csuffix-List1-List2-boolean"><span class="nav-number">1.2.37.</span> <span class="nav-text">37，suffix(List1, List2) -&gt; boolean()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#38%EF%BC%8Csum-List-number"><span class="nav-number">1.2.38.</span> <span class="nav-text">38，sum(List) -&gt; number()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#39%EF%BC%8Cukeymerge-N-TupleList1-TupleList2-TupleList3"><span class="nav-number">1.2.39.</span> <span class="nav-text">39，ukeymerge(N, TupleList1, TupleList2) -&gt; TupleList3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#40%EF%BC%8Cukeysort-N-TupleList1-TupleList2"><span class="nav-number">1.2.40.</span> <span class="nav-text">40，ukeysort(N, TupleList1) -&gt; TupleList2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#41%EF%BC%8Cumerge-ListOfLists-List1"><span class="nav-number">1.2.41.</span> <span class="nav-text">41，umerge(ListOfLists) -&gt; List1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#42%EF%BC%8Cumerge3-List1-List2-List3-List4"><span class="nav-number">1.2.42.</span> <span class="nav-text">42，umerge3(List1, List2, List3) -&gt; List4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#43%EF%BC%8Cunzip-List1-List2-List3"><span class="nav-number">1.2.43.</span> <span class="nav-text">43，unzip(List1) -&gt; {List2, List3}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#44%EF%BC%8Cunzip3-List1-List2-List3-List4"><span class="nav-number">1.2.44.</span> <span class="nav-text">44，unzip3(List1) -&gt; {List2, List3, List4}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#45%EF%BC%8Cusort-List1-List2"><span class="nav-number">1.2.45.</span> <span class="nav-text">45，usort(List1) -&gt; List2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#46%EF%BC%8Czip-List1-List2-List3"><span class="nav-number">1.2.46.</span> <span class="nav-text">46，zip(List1, List2) -&gt; List3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#47%EF%BC%8Czip3-List1-List2-List3-List4"><span class="nav-number">1.2.47.</span> <span class="nav-text">47，zip3(List1, List2, List3) -&gt; List4</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="AgatheChristie"
+      src="/images/cccq.gif">
+  <p class="site-author-name" itemprop="name">AgatheChristie</p>
+  <div class="site-description" itemprop="description">你好啊文斯</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/AgatheChristie" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;AgatheChristie" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">AgatheChristie</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
