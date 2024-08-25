@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://agathechristie.github.io/pic/erlangNode/img_8.png">
 <meta property="og:image" content="https://agathechristie.github.io/pic/erlangNode/img_10.png">
 <meta property="article:published_time" content="2023-12-01T14:21:13.000Z">
-<meta property="article:modified_time" content="2023-12-01T14:39:45.595Z">
+<meta property="article:modified_time" content="2024-07-10T16:02:08.342Z">
 <meta property="article:author" content="AgatheChristie">
 <meta property="article:tag" content="erlang">
 <meta name="twitter:card" content="summary">
@@ -175,7 +175,7 @@
     <link itemprop="mainEntityOfPage" href="https://agathechristie.github.io/2023/12/01/erlangNode/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/cccq.gif">
+      <meta itemprop="image" content="/images/benq.jpg">
       <meta itemprop="name" content="AgatheChristie">
       <meta itemprop="description" content="你好啊文斯">
     </span>
@@ -194,10 +194,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2023-12-01 22:21:13 / 修改时间：22:39:45" itemprop="dateCreated datePublished" datetime="2023-12-01T22:21:13+08:00">2023-12-01</time>
+              <time title="创建时间：2023-12-01 22:21:13" itemprop="dateCreated datePublished" datetime="2023-12-01T22:21:13+08:00">2023-12-01</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-07-11 00:02:08" itemprop="dateModified" datetime="2024-07-11T00:02:08+08:00">2024-07-11</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -222,10 +228,10 @@
         <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>erlang node study</p>
 <span id="more"></span>
 
-<h2 id="本地注册"><a href="#本地注册" class="headerlink" title="本地注册"></a>本地注册</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">werl -name &#x27;fries@127.0.0.1&#x27;</span><br><span class="line"></span><br><span class="line">之前的版本需要加&#x27;&#x27;现在加了会直接报错</span><br><span class="line"></span><br><span class="line">werl -name fries@127.0.0.1</span><br><span class="line"></span><br><span class="line">werl -name ketchup@127.0.0.1</span><br></pre></td></tr></table></figure>
+<h2 id="本地注册"><a href="#本地注册" class="headerlink" title="本地注册"></a>本地注册</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">werl -name &#x27;fries@127.0.0.1&#x27;</span><br><span class="line"></span><br><span class="line">之前的版本需要加&#x27;&#x27;现在加了会直接报错</span><br><span class="line"></span><br><span class="line">werl -name fries@127.0.0.1</span><br><span class="line"></span><br><span class="line">werl -name ketchup@127.0.0.1</span><br><span class="line"></span><br><span class="line">erlang:send(Dest, Msg) -&gt; Msg</span><br><span class="line">This is the same as using the send operator: Dest ! Msg.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <h3 id="不连接-直接给在本地注册名字的节点发消息"><a href="#不连接-直接给在本地注册名字的节点发消息" class="headerlink" title="不连接 直接给在本地注册名字的节点发消息"></a>不连接 直接给在本地注册名字的节点发消息</h3><p>此时两个节点的cookie是一样的</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">erlang:get_cookie().</span><br><span class="line">register(uzi,self()).</span><br><span class="line">fries 下执行</span><br><span class="line">&#123;uzi,&#x27;fries@127.0.0.1&#x27;&#125; ! &#123;hellocc,fromqqq,self()&#125;.</span><br></pre></td></tr></table></figure>
-<p>可以收到消息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">erlang:get_cookie().</span><br><span class="line">erlang:register(uzi,self()).</span><br><span class="line">global:register_name(uzi, self()).</span><br><span class="line">fries 下执行</span><br><span class="line">&#123;uzi,&#x27;fries@127.0.0.1&#x27;&#125; ! &#123;hellocc,fromqqq,self()&#125;.</span><br></pre></td></tr></table></figure>
+<p>1.可以用一个一模一样的名字在本地和全局同时注册<br>2.!操作符传注册名的话只能收到本地注册名的消息<br>3.上面可以收到消息是因为在本地注册了uzi erlang:register(uzi,self())<br>4.如果 不在本地注册uzi只全局注册global:register_name(uzi, self()).<br>这样在K节点向F节点发送消息F节点是收不到的,如果只想向一个全局注册的名字进程发送消息需要<br>取到pid比如global:whereis_name(uzi) ! {hellocc,fromqqq,self()}.</p>
 <p><img src="/pic/erlangNode/img_3.png" alt="img_3.png"></p>
 <p>给K节点发</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;uzi,&#x27;ketchup@127.0.0.1&#x27;&#125; ! &#123;hellocc,fromqqq,self()&#125;.</span><br></pre></td></tr></table></figure>
@@ -297,10 +303,13 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2023/11/21/Erlang%20List/" rel="prev" title="Erlang list笔记">
-      <i class="fa fa-chevron-left"></i> Erlang list笔记
+    <a href="/2023/12/01/erlangRanch/" rel="prev" title="cowboy Ranch1.8.0">
+      <i class="fa fa-chevron-left"></i> cowboy Ranch1.8.0
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/12/05/decompile/" rel="next" title="erlang反编译">
+      erlang反编译 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -366,7 +375,7 @@
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
     <img class="site-author-image" itemprop="image" alt="AgatheChristie"
-      src="/images/cccq.gif">
+      src="/images/benq.jpg">
   <p class="site-author-name" itemprop="name">AgatheChristie</p>
   <div class="site-description" itemprop="description">你好啊文斯</div>
 </div>
@@ -375,20 +384,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-count">21</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -400,6 +409,55 @@
   </div>
 
 
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+    </ul>
+  </div>
 
       </div>
 
@@ -420,7 +478,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2023</span>
+  <span itemprop="copyrightYear">2024</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

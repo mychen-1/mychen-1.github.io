@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"agathechristie.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述用excel导出的erlang data文件重新转回csv">
+<meta property="og:type" content="article">
+<meta property="og:title" content="erlang data2csv">
+<meta property="og:url" content="https://agathechristie.github.io/2024/08/04/e2csv/index.html">
+<meta property="og:site_name" content="AgatheChristie&#96;s Blog">
+<meta property="og:description" content="概述用excel导出的erlang data文件重新转回csv">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://agathechristie.github.io/pic/e2csv/img.png">
+<meta property="og:image" content="https://agathechristie.github.io/pic/e2csv/img_1.png">
+<meta property="og:image" content="https://agathechristie.github.io/pic/e2csv/img_2.png">
+<meta property="article:published_time" content="2024-08-04T14:21:13.000Z">
+<meta property="article:modified_time" content="2024-08-17T15:37:21.785Z">
+<meta property="article:author" content="AgatheChristie">
+<meta property="article:tag" content="erlang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://agathechristie.github.io/pic/e2csv/img.png">
+
+<link rel="canonical" href="https://agathechristie.github.io/2024/08/04/e2csv/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>erlang data2csv | AgatheChristie`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">AgatheChristie`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">清空不必要的</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://agathechristie.github.io/2024/08/04/e2csv/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/benq.jpg">
+      <meta itemprop="name" content="AgatheChristie">
+      <meta itemprop="description" content="你好啊文斯">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AgatheChristie`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          erlang data2csv
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-08-04 22:21:13" itemprop="dateCreated datePublished" datetime="2024-08-04T22:21:13+08:00">2024-08-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-08-17 23:37:21" itemprop="dateModified" datetime="2024-08-17T23:37:21+08:00">2024-08-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>用excel导出的erlang data文件重新转回csv</p>
+<span id="more"></span>
+
+
+<h2 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h2><pre><code>用excel导出的erlang data文件重新转回csv
+</code></pre>
+<h3 id="数据文件"><a href="#数据文件" class="headerlink" title="数据文件"></a>数据文件</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line">%%===================================================</span><br><span class="line">%%作    者：泰奇  https://agathechristie.github.io/  QQ：544682223</span><br><span class="line">%%创建时间：2024-01-24 17:51:20</span><br><span class="line">%%备    注：此代码为工具生成 请勿手工修改</span><br><span class="line">%%===================================================</span><br><span class="line">-module(scene_data).</span><br><span class="line">-include(&quot;common.hrl&quot;).</span><br><span class="line">-include(&quot;scene.hrl&quot;).</span><br><span class="line">-export([list/0, get/1]).</span><br><span class="line">list() -&gt; [100, 101, 102, 103].</span><br><span class="line">get(100) -&gt;</span><br><span class="line">    #ets_scene&#123;</span><br><span class="line">        sid = 1001,</span><br><span class="line">        type = 0,</span><br><span class="line">        name = ?T(&quot;仙灵岛&quot;),</span><br><span class="line">        x = 15,</span><br><span class="line">        y = 17,</span><br><span class="line">        safe = [0, 0, 0, 0],</span><br><span class="line">        npc = [[21034, 29, 28], [10103, 21, 22], [10109, 43, 40]],</span><br><span class="line">        mon = [[40004, 19, 65, 1], [44104, 10, 110, 1], [40004, 22, 61, 1]],</span><br><span class="line">        elem = [],</span><br><span class="line">        requirement = [&#123;item, 0&#125;, &#123;lv, 0&#125;, &#123;time, 0&#125;],</span><br><span class="line">        id = 100</span><br><span class="line">    &#125;;</span><br><span class="line">get(101) -&gt;</span><br><span class="line">    #ets_scene&#123;</span><br><span class="line">        sid = 101,</span><br><span class="line">        type = 1,</span><br><span class="line">        name = ?T(&quot;雷泽&quot;),</span><br><span class="line">        x = 102,</span><br><span class="line">        y = 214,</span><br><span class="line">        safe = [87, 150, 1, 0],</span><br><span class="line">        npc = [[21034, 29, 28], [10103, 21, 22], [10109, 43, 40]],</span><br><span class="line">        mon = [[40004, 19, 65, 1], [44104, 10, 110, 1], [40004, 22, 61, 1]],</span><br><span class="line">        elem = [[1, 119, ?T(&quot;野外竞技场&quot;), 46, 128], [2, 300, ?T(&quot;九霄&quot;), 81, 18], [3, 251, ?T(&quot;太昊城城郊&quot;), 94, 222], [4, 201, ?T(&quot;娲皇城城郊&quot;), 102, 203], [5, 281, ?T(&quot;华阳城城郊&quot;), 110, 223]],</span><br><span class="line">        requirement = [&#123;item, 0&#125;, &#123;lv, 0&#125;, &#123;time, 0&#125;],</span><br><span class="line">        id = 101</span><br><span class="line">    &#125;;</span><br><span class="line">get(102) -&gt;</span><br><span class="line">    #ets_scene&#123;</span><br><span class="line">        sid = 102,</span><br><span class="line">        type = 1,</span><br><span class="line">        name = ?T(&quot;洛水&quot;),</span><br><span class="line">        x = 106,</span><br><span class="line">        y = 57,</span><br><span class="line">        safe = [0, 0, 0, 0],</span><br><span class="line">        npc = [[21034, 29, 28], [10103, 21, 22], [10109, 43, 40]],</span><br><span class="line">        mon = [[40004, 19, 65, 1], [44104, 10, 110, 1], [40004, 22, 61, 1]],</span><br><span class="line">        elem = [[1, 103, ?T(&quot;苍莽林&quot;), 5, 13], [2, 300, ?T(&quot;九霄&quot;), 110, 12]],</span><br><span class="line">        requirement = [&#123;item, 0&#125;, &#123;lv, 0&#125;, &#123;time, 0&#125;],</span><br><span class="line">        id = 102</span><br><span class="line">    &#125;;</span><br><span class="line">get(103) -&gt;</span><br><span class="line">    #ets_scene&#123;</span><br><span class="line">        sid = 103,</span><br><span class="line">        type = 1,</span><br><span class="line">        name = ?T(&quot;苍莽林&quot;),</span><br><span class="line">        x = 52,</span><br><span class="line">        y = 183,</span><br><span class="line">        safe = [0, 0, 0, 0],</span><br><span class="line">        npc = [[21034, 29, 28], [10103, 21, 22], [10109, 43, 40]],</span><br><span class="line">        mon = [[40004, 19, 65, 1], [44104, 10, 110, 1], [40004, 22, 61, 1]],</span><br><span class="line">        elem = [[1, 102, ?T(&quot;洛水&quot;), 15, 19]],</span><br><span class="line">        requirement = [&#123;item, 0&#125;, &#123;lv, 0&#125;, &#123;time, 0&#125;],</span><br><span class="line">        id = 103</span><br><span class="line">    &#125;;</span><br><span class="line">get(_SceneId) -&gt;</span><br><span class="line">    undefined.</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">%%===================================================</span><br><span class="line">%%作    者：泰奇  https://agathechristie.github.io/  QQ：544682223</span><br><span class="line">%%创建时间：2024-01-24 17:51:20</span><br><span class="line">%%备    注：此代码为工具生成 请勿手工修改</span><br><span class="line">%%===================================================</span><br><span class="line">-module(base_realm_data).</span><br><span class="line">-include(&quot;common.hrl&quot;).</span><br><span class="line">-export([all/0, get_id/1]).</span><br><span class="line">all() -&gt; [1, 2, 3, 100].</span><br><span class="line">get_id(1) -&gt; #&#123;</span><br><span class="line">    id =&gt; 1,</span><br><span class="line">    name =&gt; ?T(&quot;女娲&quot;)</span><br><span class="line">&#125;;</span><br><span class="line">get_id(2) -&gt; #&#123;</span><br><span class="line">    id =&gt; 2,</span><br><span class="line">    name =&gt; ?T(&quot;神农&quot;)</span><br><span class="line">&#125;;</span><br><span class="line">get_id(3) -&gt; #&#123;</span><br><span class="line">    id =&gt; 3,</span><br><span class="line">    name =&gt; ?T(&quot;伏羲&quot;)</span><br><span class="line">&#125;;</span><br><span class="line">get_id(100) -&gt; #&#123;</span><br><span class="line">    id =&gt; 100,</span><br><span class="line">    name =&gt; ?T(&quot;新手&quot;)</span><br><span class="line">&#125;;</span><br><span class="line">get_id(_Id) -&gt;</span><br><span class="line">    undefined.</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="主文件"><a href="#主文件" class="headerlink" title="主文件"></a>主文件</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line">-module(csv_gen_tests).</span><br><span class="line">-include(&quot;scene.hrl&quot;).</span><br><span class="line">-export([</span><br><span class="line">    base_realm_data/0</span><br><span class="line">    , scene_data/0</span><br><span class="line">    , gen_all/0</span><br><span class="line">]).</span><br><span class="line">gen_all() -&gt;</span><br><span class="line">    scene_data(),</span><br><span class="line">    base_realm_data().</span><br><span class="line"></span><br><span class="line">%% 生成地图场景表</span><br><span class="line">scene_data() -&gt;</span><br><span class="line">    gen_record_data([?FUNCTION_NAME], record_info(fields, ets_scene), get),</span><br><span class="line">    ok.</span><br><span class="line"></span><br><span class="line">%% 生成阵营表</span><br><span class="line">base_realm_data() -&gt;</span><br><span class="line">    gen_map_data([?FUNCTION_NAME], get_id),</span><br><span class="line">    ok.</span><br><span class="line"></span><br><span class="line">gen_map_data([], _F) -&gt;</span><br><span class="line">    ok;</span><br><span class="line">gen_map_data([Mod | T], F) -&gt;</span><br><span class="line">    &#123;ok, File&#125; = file:open(atom_to_list(Mod) ++ &quot;.csv&quot;, [write]),</span><br><span class="line">    A = [FirstId | _] = get_all_ids(Mod),</span><br><span class="line">    FirstMap = Mod:F(FirstId),</span><br><span class="line">    csv_gen:row(File, maps:keys(FirstMap)),</span><br><span class="line">    get_map_data_(A, File, Mod, F),</span><br><span class="line">    file:close(File),</span><br><span class="line">    gen_map_data(T, F).</span><br><span class="line"></span><br><span class="line">get_all_ids(Mod) -&gt;</span><br><span class="line">    case catch Mod:list_ids() of</span><br><span class="line">        TmpA when is_list(TmpA) -&gt;</span><br><span class="line">            TmpA;</span><br><span class="line">        _ -&gt;</span><br><span class="line">            case catch Mod:list() of</span><br><span class="line">                TmpB when is_list(TmpB) -&gt;</span><br><span class="line">                    TmpB;</span><br><span class="line">                _ -&gt;</span><br><span class="line">                    Mod:all()</span><br><span class="line">            end</span><br><span class="line"></span><br><span class="line">    end.</span><br><span class="line"></span><br><span class="line">gen_record_data([], _RecordName, _F) -&gt;</span><br><span class="line">    ok;</span><br><span class="line">gen_record_data([Mod | T], RecordName, F) -&gt;</span><br><span class="line">    &#123;ok, File&#125; = file:open(atom_to_list(Mod) ++ &quot;.csv&quot;, [write]),</span><br><span class="line">    csv_gen:row(File, RecordName),</span><br><span class="line">    AllIds = get_all_ids(Mod),</span><br><span class="line">    gen_record_data_(AllIds, File, Mod, F),</span><br><span class="line">    file:close(File),</span><br><span class="line">    gen_record_data(T, RecordName, F).</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">get_map_data_([], _File, _Mod, _F) -&gt;</span><br><span class="line">    ok;</span><br><span class="line">get_map_data_([H | T], File, Mod, F) -&gt;</span><br><span class="line">    case Mod:F(H) of</span><br><span class="line">        A when is_map(A) -&gt;</span><br><span class="line">            B = maps:values(A),</span><br><span class="line">            csv_gen:row(File, B);</span><br><span class="line">        _E -&gt;</span><br><span class="line">            ok</span><br><span class="line">    end,</span><br><span class="line">    get_map_data_(T, File, Mod, F).</span><br><span class="line"></span><br><span class="line">gen_record_data_([], _File, _Mod, _F) -&gt;</span><br><span class="line">    ok;</span><br><span class="line">gen_record_data_([H | T], File, Mod, F) -&gt;</span><br><span class="line">    case Mod:F(H) of</span><br><span class="line">        A when is_tuple(A) -&gt;</span><br><span class="line">            [_ | B] = tuple_to_list(A),</span><br><span class="line">            csv_gen:row(File, B);</span><br><span class="line">        _E -&gt;</span><br><span class="line">            ok</span><br><span class="line">    end,</span><br><span class="line">    gen_record_data_(T, File, Mod, F).</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">-module(csv_gen).</span><br><span class="line">-export([newline/1, comma/1, field/2, row/2]).</span><br><span class="line">newline(File) -&gt;</span><br><span class="line">  file:write(File, &quot;\n&quot;).</span><br><span class="line"></span><br><span class="line">comma(File) -&gt;</span><br><span class="line">  file:write(File, &quot;,&quot;).</span><br><span class="line"></span><br><span class="line">field(File, Value) when is_tuple(Value) -&gt;</span><br><span class="line">  file:write(File, &quot;\&quot;&quot;),</span><br><span class="line">  file:write(File, io_lib:format(&quot;~p&quot;,[Value])),</span><br><span class="line">  file:write(File, &quot;\&quot;&quot;);</span><br><span class="line">field(File, Value) when is_binary(Value) -&gt;</span><br><span class="line">  Match = binary:match(Value, [&lt;&lt;&quot;,&quot;&gt;&gt;, &lt;&lt;&quot;\n&quot;&gt;&gt;, &lt;&lt;&quot;\&quot;&quot;&gt;&gt;]),</span><br><span class="line">  case Match of</span><br><span class="line">    nomatch -&gt;</span><br><span class="line">      file:write(File, Value);</span><br><span class="line">    _ -&gt;</span><br><span class="line">      file:write(File, &quot;\&quot;&quot;),</span><br><span class="line">      file:write(File, binary:replace(Value, &lt;&lt;&quot;\&quot;&quot;&gt;&gt;, &lt;&lt;&quot;\&quot;\&quot;&quot;&gt;&gt;, [global])),</span><br><span class="line">      file:write(File, &quot;\&quot;&quot;)</span><br><span class="line">  end;</span><br><span class="line">field(File, Value) when is_list(Value) -&gt;</span><br><span class="line">%%  field(File, unicode:characters_to_binary(Value));</span><br><span class="line">%%  field(File, term_to_binary(Value));</span><br><span class="line">  field(File, list_to_tuple(Value));</span><br><span class="line">field(File, Value) when is_integer(Value) -&gt;</span><br><span class="line">  file:write(File, integer_to_list(Value));</span><br><span class="line">field(File, Value) when is_atom(Value) -&gt;</span><br><span class="line">  file:write(File, io_lib:write_atom(Value));</span><br><span class="line">field(File, Value) when is_float(Value) -&gt;</span><br><span class="line">  file:write(File, io_lib:format(&quot;~f&quot;,[Value]));</span><br><span class="line">field(File, Value) -&gt;</span><br><span class="line">  file:write(File, io_lib:format(&quot;\&quot;~p\&quot;&quot;,[Value])).</span><br><span class="line"></span><br><span class="line">row(File, Elem) when is_tuple(Elem) -&gt;</span><br><span class="line">  ListElem = tuple_to_list(Elem),</span><br><span class="line">  row(File, ListElem);</span><br><span class="line">row(File, []) -&gt;</span><br><span class="line">  newline(File);</span><br><span class="line">row(File, [Value]) -&gt;</span><br><span class="line">  field(File, Value),</span><br><span class="line">  newline(File);</span><br><span class="line">row(File, [Value | Rest]) -&gt;</span><br><span class="line">  field(File, Value),</span><br><span class="line">  comma(File),</span><br><span class="line">  row(File, Rest).</span><br></pre></td></tr></table></figure>
+<h3 id="头文件"><a href="#头文件" class="headerlink" title="头文件"></a>头文件</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">common.hrl</span><br><span class="line">-define(T(Text), (&lt;&lt;Text/utf8&gt;&gt;)).</span><br><span class="line"></span><br><span class="line">scene.hrl</span><br><span class="line">-record(ets_scene, &#123;</span><br><span class="line">    sid,                                    %% 场景id</span><br><span class="line">    type = 0,                               %% 0:城镇 1:野外场景, 2:副本, 5:氏族领地, 6:竞技场, 7:封神台,8:秘境,9:神岛,</span><br><span class="line">    name,                                   %% 场景名称</span><br><span class="line">    x = 0,                                  %% 默认x坐标</span><br><span class="line">    y = 0,                                  %% 默认y坐标</span><br><span class="line">    requirement,                            %% 进入需求</span><br><span class="line">    elem,                                   %% 场景元素</span><br><span class="line">    npc,                                    %% 场景NPC数据结构,</span><br><span class="line">    mon,                                    %% 场景怪物数据结构,</span><br><span class="line">    mask,                                   %% 场景移动坐标信息</span><br><span class="line">    safe,                                   %% 安全区</span><br><span class="line">    id = 0                                  %% 场景唯一ID</span><br><span class="line">&#125;).</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="图示"><a href="#图示" class="headerlink" title="图示"></a>图示</h2><p><img src="/pic/e2csv/img.png" alt="img.png"></p>
+<p><img src="/pic/e2csv/img_1.png" alt="img_1.png"></p>
+<p><img src="/pic/e2csv/img_2.png" alt="img_2.png"></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="AgatheChristie 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="AgatheChristie 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>AgatheChristie
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://agathechristie.github.io/2024/08/04/e2csv/" title="erlang data2csv">https://agathechristie.github.io/2024/08/04/e2csv/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/erlang/" rel="tag"># erlang</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/08/04/linuxcolor/" rel="prev" title="linux下使xx.log输出颜色">
+      <i class="fa fa-chevron-left"></i> linux下使xx.log输出颜色
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9C%80%E6%B1%82"><span class="nav-number">1.1.</span> <span class="nav-text">需求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.</span> <span class="nav-text">数据文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.2.</span> <span class="nav-text">主文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.3.</span> <span class="nav-text">头文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E7%A4%BA"><span class="nav-number">1.2.</span> <span class="nav-text">图示</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="AgatheChristie"
+      src="/images/benq.jpg">
+  <p class="site-author-name" itemprop="name">AgatheChristie</p>
+  <div class="site-description" itemprop="description">你好啊文斯</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/AgatheChristie" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;AgatheChristie" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">AgatheChristie</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
