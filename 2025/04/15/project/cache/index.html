@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>缓存模块 | 陈志伟`s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="1.缓存模块打算以玩家缓存举例。 玩家数据分为三个地方   1.玩家player 基于内存   2.ets缓存  3.mysql（dets）数据库 玩家数据同时只会存在player 或者 ets中。 流程如下：  介绍：  ​	1.第一次查先去dets查到，放入ets中，如果该字段有修改， 放入player，删除ets。 ​    2.落地就是五分钟定时器，刷到MySQL ​	3.玩家下线 放入e">
+<meta property="og:type" content="article">
+<meta property="og:title" content="缓存模块">
+<meta property="og:url" content="http://example.com/2025/04/15/project/cache/index.html">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="1.缓存模块打算以玩家缓存举例。 玩家数据分为三个地方   1.玩家player 基于内存   2.ets缓存  3.mysql（dets）数据库 玩家数据同时只会存在player 或者 ets中。 流程如下：  介绍：  ​	1.第一次查先去dets查到，放入ets中，如果该字段有修改， 放入player，删除ets。 ​    2.落地就是五分钟定时器，刷到MySQL ​	3.玩家下线 放入e">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/2.png">
+<meta property="article:published_time" content="2025-04-15T09:01:51.000Z">
+<meta property="article:modified_time" content="2025-04-15T09:28:01.299Z">
+<meta property="article:author" content="陈志伟">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/2.png">
+  
+    <link rel="alternate" href="/atom.xml" title="陈志伟`s Blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">陈志伟`s Blog</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">one</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS 订阅"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="搜索"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-project/cache" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/04/15/project/cache/" class="article-date">
+  <time class="dt-published" datetime="2025-04-15T09:01:51.000Z" itemprop="datePublished">2025-04-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      缓存模块
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="1-缓存模块"><a href="#1-缓存模块" class="headerlink" title="1.缓存模块"></a>1.缓存模块</h1><p>打算以玩家缓存举例。</p>
+<p>玩家数据分为三个地方   1.玩家player 基于内存   2.ets缓存  3.mysql（dets）数据库</p>
+<p>玩家数据同时只会存在player 或者 ets中。</p>
+<p>流程如下：</p>
+<p><img src="/../../images/2.png" alt="2"></p>
+<p>介绍： </p>
+<p>​	1.第一次查先去dets查到，放入ets中，如果该字段有修改， 放入player，删除ets。</p>
+<p>​    2.落地就是五分钟定时器，刷到MySQL</p>
+<p>​	3.玩家下线 放入ets。</p>
+<h3 id="问题点："><a href="#问题点：" class="headerlink" title="问题点："></a>问题点：</h3><p>1.ets会不会很大， 因为玩家下线是存放到ets中， 确保下次查找快？</p>
+<p>​		答：应该并不会，每次重启的时候ets其实是空的， 对于流失玩家数据不会加载到ets。</p>
+<p>​		优化：①.既然觉得ets大，那每个cache进程起一个定时器（时间自己定）。以玩家为单位，每次更新获取当前时间戳。 当定时器到的时候，时间过久未变化的删除。</p>
+<p>​		            ②.灵感来源于 erlang内存管理，新生代老年代。对于ets数据引用 计数器，定时器也开启作用于数据 状态变化以及数据清除。</p>
+<p>2.既然数据存储于player 内存上，那player结构想必会很大。那方法调用，栈会不会很大效率低下？</p>
+<p>项目目前未发现问题。 但是注意点 不要将player结构用于进程传输， 这样会导致进程崩溃的。</p>
+<h3 id="3-缺点："><a href="#3-缺点：" class="headerlink" title="3.缺点："></a>3.缺点：</h3><p>1.所有玩家数据可能存在player或者ets中， 这样导致修数据的时候， 不能拿取整个ets操作。 需要构造玩家进程 再构造player。但是这种构造player其实不大，因为只加载必要数据。  但是还有一个问题，那就是老号的数据也加载进来了。ets有很多无用数据。</p>
+<h2 id="2-版本管理"><a href="#2-版本管理" class="headerlink" title="2.版本管理"></a>2.版本管理</h2><p>项目设计是一个功能一张表， 并没有使用一张表 player_id, data ，data序列化模式。 </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2025/04/15/project/cache/" data-id="cm9iamvdg00003cuy6ujc45b2" data-title="缓存模块" class="article-share-link"><span class="fa fa-share">分享</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/04/15/project/summarize/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">跨服 活动 合服总结</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/04/">四月 2025</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/04/15/project/cache/">缓存模块</a>
+          </li>
+        
+          <li>
+            <a href="/2025/04/15/project/summarize/">跨服 活动 合服总结</a>
+          </li>
+        
+          <li>
+            <a href="/2025/04/15/project/merge/">合服</a>
+          </li>
+        
+          <li>
+            <a href="/2025/04/15/project/activity/">活动模块</a>
+          </li>
+        
+          <li>
+            <a href="/2025/04/15/project/title/">跨服分组</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2025 陈志伟<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
