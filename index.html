@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   
   
-  <title>Hexo</title>
+  <title>陈志伟`s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="陈志伟&#96;s Blog">
 <meta property="og:url" content="http://example.com/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:locale" content="en_US">
-<meta property="article:author" content="John Doe">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="陈志伟">
 <meta name="twitter:card" content="summary">
   
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+    <link rel="alternate" href="/atom.xml" title="陈志伟`s Blog" type="application/atom+xml">
   
   
     <link rel="shortcut icon" href="/favicon.png">
@@ -41,8 +41,12 @@
   <div id="header-outer" class="outer">
     <div id="header-title" class="inner">
       <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
+        <a href="/" id="logo">陈志伟`s Blog</a>
       </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">one</a>
+        </h2>
       
     </div>
     <div id="header-inner" class="inner">
@@ -57,12 +61,12 @@
       <nav id="sub-nav">
         
         
-          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+          <a class="nav-icon" href="/atom.xml" title="RSS 订阅"><span class="fa fa-rss"></span></a>
         
-        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+        <a class="nav-icon nav-search-btn" title="搜索"><span class="fa fa-search"></span></a>
       </nav>
       <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
       </div>
     </div>
   </div>
@@ -85,7 +89,7 @@
         
   
     <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/15/title/">title</a>
+      <a class="p-name article-title" href="/2025/04/15/title/">跨服分组</a>
     </h1>
   
 
@@ -93,66 +97,50 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/15/title/" data-id="cm9hv02wr00013kuy8cevaudr" data-title="title" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/title/" rel="tag">title</a></li></ul>
+        <h1 id="1-类型"><a href="#1-类型" class="headerlink" title="1.类型"></a>1.类型</h1><p>分为：中心服和游戏服</p>
+<p>作用：</p>
+<p>​		1.中心服：负责跨服分组，同步游戏服</p>
+<p>​		2.游戏服：游戏业务玩法。后台对接等。</p>
+<p>连接方式：游戏服与中心服互联，游戏服之间也互联。 </p>
+<p>​		实现:有一张ets_svr_to_node表，每一个服都存在。由中心服同步。</p>
+<p>​		调用方式：rpc</p>
+<h1 id="2-数据结构"><a href="#2-数据结构" class="headerlink" title="2.数据结构"></a>2.数据结构</h1><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">// 节点信息</span><br><span class="line"><span class="keyword">-record</span><span class="params">(server_node_info, &#123;</span></span><br><span class="line"><span class="params">    svr_id = <span class="number">0</span>                      <span class="comment">% &#x27;服务器id&#x27;</span></span></span><br><span class="line"><span class="params">    , score = <span class="number">0</span>                     <span class="comment">% &#x27;服务器评分&#x27;</span></span></span><br><span class="line"><span class="params">    , merge_ids = []                <span class="comment">% &#x27;被合服id&#x27;</span></span></span><br><span class="line"><span class="params">    , group_info = #&#123;&#125;              <span class="comment">% &#x27;分组信息&#x27;</span></span></span><br><span class="line"><span class="params">    ....</span></span><br><span class="line"><span class="params">&#125;)</span>.</span><br><span class="line">// 组信息</span><br><span class="line"><span class="keyword">-record</span><span class="params">(cross_group_info, &#123;</span></span><br><span class="line"><span class="params">    key                             <span class="comment">% 唯一key &#123;type, group_id&#125;</span></span></span><br><span class="line"><span class="params">    , type = ?CROSS_GROUP_TYPE_PAIR <span class="comment">% 类型</span></span></span><br><span class="line"><span class="params">    , group_id = <span class="number">0</span>                  <span class="comment">% 组id</span></span></span><br><span class="line"><span class="params">    , main_id = <span class="number">0</span>                   <span class="comment">% 主服 id</span></span></span><br><span class="line"><span class="params">    , svr_list = []                 <span class="comment">% 游戏服id</span></span></span><br><span class="line"><span class="params">    , child_list = []               <span class="comment">% 子分组id</span></span></span><br><span class="line"><span class="params">    , next_child = []               <span class="comment">% 下次子分组id</span></span></span><br><span class="line"><span class="params">    , parent_list = #&#123;&#125;             <span class="comment">% 父分组id #&#123;type =&gt; ParentGroupId&#125;</span></span></span><br><span class="line"><span class="params">    ...</span></span><br><span class="line"><span class="params">&#125;)</span>.</span><br><span class="line"></span><br><span class="line">//组类型 构成</span><br><span class="line">小组 -&gt; 游戏服</span><br><span class="line">大组 -&gt; 小组</span><br><span class="line">聊天组 -&gt; 游戏服</span><br></pre></td></tr></table></figure>
 
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/04/14/hello-world/" class="article-date">
-  <time class="dt-published" datetime="2025-04-14T11:32:56.163Z" itemprop="datePublished">2025-04-14</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/14/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p><img src="C:\Users\chen\AppData\Roaming\Typora\typora-user-images\image-20250415095142748.png" alt="image-20250415095142748"></p>
-<p>this is add</p>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<h1 id="3-中心服逻辑"><a href="#3-中心服逻辑" class="headerlink" title="3.中心服逻辑"></a>3.中心服逻辑</h1><h2 id="1-游戏服连接-nodeconnect"><a href="#1-游戏服连接-nodeconnect" class="headerlink" title="1.游戏服连接(nodeconnect)"></a>1.游戏服连接(nodeconnect)</h2><ol>
+<li>携带nodeinfo信息，主要服务器id，node节点、合服ids等。</li>
+<li>查询该游戏服旧数据，主要是比较新旧合服信息。（由差异 被合服走游戏服删除逻辑）</li>
+<li>遍历所有游戏服类型（聊天组、大组等）， 但是连接只会加入聊天组。</li>
+<li>同步信息到其他游戏服。先同步自己服</li>
+</ol>
+<h2 id="2-游戏服退出、删除"><a href="#2-游戏服退出、删除" class="headerlink" title="2.游戏服退出、删除"></a>2.游戏服退出、删除</h2><p>接口有游戏服退出和删除。</p>
+<p>退出：</p>
+<p>1.遍历所有需要退出的组。（从小到大）</p>
+<p>2.需要比较组的子分组是什么类型， </p>
+<p>​	2.1.游戏服，组信息直接删除。</p>
+<p>​	2.2.小组等多种游戏服集合的。 寻找该组的父组， 也去删除。</p>
+<p>3.通知自己节点更新。</p>
+<h2 id="3-每日刷新"><a href="#3-每日刷新" class="headerlink" title="3.每日刷新"></a>3.每日刷新</h2><ol>
+<li>检测游戏服分数， 满足分数的加入组。</li>
+<li>因为节点连接加入了聊天组， 只需要加入 小组 -&gt; 大组</li>
+<li>星期一， 跨服分组<ol>
+<li>删除游戏服所有组信息，组信息删除。</li>
+<li>获取所有节点，进行跨服分组。</li>
+</ol>
+</li>
+<li>检测活动开启</li>
+<li>同步所有信息。</li>
+</ol>
+<p>思考：</p>
+<p>1.对于组结构中有svr_list字段，是所有节点的id。 在游戏服退出删除的时候， 在组信息中也需要删除，则需要遍历所有该游戏服所有组。</p>
+<p>优化1：对于组信息的子分组不是游戏服的时候， 只存储子分组的组id，这样删除退出操作，只需要删除组类型的子分组是游戏服的。</p>
+<p>缺点：查询的时候需要递归查询。</p>
+<p>2.周一跨服重组的时候，会刷新活动，如果活动是小组、大组并且跨周的时候。怎么处理？</p>
+<p> 解决：活动那边在活动初始化的时候，存储cross_group_info信息。 跨服组变化的时候 不会改变正在进行的活动。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/14/hello-world/" data-id="cm9hv02wo00003kuy35ylesva" data-title="Hello World" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/04/15/title/" data-id="cm9hv02wr00013kuy8cevaudr" data-title="跨服分组" class="article-share-link"><span class="fa fa-share">分享</span></a>
       
       
       
@@ -174,10 +162,15 @@
 
   
     
+
+  
+    
+  
+    
   <div class="widget-wrap">
-    <h3 class="widget-title">Tags</h3>
+    <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/title/" rel="tag">title</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/04/">四月 2025</a></li></ul>
     </div>
   </div>
 
@@ -185,35 +178,12 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Tag Cloud</h3>
-    <div class="widget tagcloud">
-      <a href="/tags/title/" style="font-size: 10px;">title</a>
-    </div>
-  </div>
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/04/">April 2025</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
+    <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
         
           <li>
-            <a href="/2025/04/15/title/">title</a>
-          </li>
-        
-          <li>
-            <a href="/2025/04/14/hello-world/">Hello World</a>
+            <a href="/2025/04/15/title/">跨服分组</a>
           </li>
         
       </ul>
@@ -229,7 +199,7 @@
   <div class="outer">
     <div id="footer-info" class="inner">
       
-      &copy; 2025 John Doe<br>
+      &copy; 2025 陈志伟<br>
       Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
