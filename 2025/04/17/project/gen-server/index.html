@@ -4,13 +4,17 @@
   <meta charset="utf-8">
   
   
-  <title>陈志伟`s Blog</title>
+  <title>gen_server深究 | 陈志伟`s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="陈志伟&#96;s Blog">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="要想熟悉gen_server运作， 先去熟悉 proc_lib 和 gen 1.proc_lib重要接口 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gen_server深究">
+<meta property="og:url" content="http://example.com/2025/04/17/project/gen-server/index.html">
 <meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="要想熟悉gen_server运作， 先去熟悉 proc_lib 和 gen 1.proc_lib重要接口 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-04-17T08:28:47.000Z">
+<meta property="article:modified_time" content="2025-04-17T10:13:44.597Z">
 <meta property="article:author" content="陈志伟">
 <meta name="twitter:card" content="summary">
   
@@ -73,9 +77,7 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-project/gen-server" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-project/gen-server" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2025/04/17/project/gen-server/" class="article-date">
   <time class="dt-published" datetime="2025-04-17T08:28:47.000Z" itemprop="datePublished">2025-04-17</time>
@@ -88,8 +90,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/17/project/gen-server/">gen_server深究</a>
+    <h1 class="p-name article-title" itemprop="headline name">
+      gen_server深究
     </h1>
   
 
@@ -118,375 +120,19 @@
     </footer>
   </div>
   
-</article>
-
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-project/notes" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/04/17/project/notes/" class="article-date">
-  <time class="dt-published" datetime="2025-04-17T07:25:51.000Z" itemprop="datePublished">2025-04-17</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/17/project/notes/">erlang杂记</a>
-    </h1>
+    <a href="/2025/04/17/project/notes/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">erlang杂记</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h1 id="1-rpc-cast-与-call"><a href="#1-rpc-cast-与-call" class="headerlink" title="1.rpc:cast 与 call"></a>1.rpc:cast 与 call</h1><p>启动一个rex的gen_server进程。</p>
-<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">-define</span><span class="params">(NAME, rex)</span>.</span><br><span class="line"><span class="function"><span class="title">start</span><span class="params">()</span> -&gt;</span></span><br><span class="line">    gen_server:start(&#123;local,?NAME&#125;, ?MODULE, [], ?SPAWN_OPTS).</span><br></pre></td></tr></table></figure>
-
-<p>以cast举例</p>
-<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">rpc.erl</span><br><span class="line"><span class="function"><span class="title">cast</span><span class="params">(Node, Mod, Fun, Args)</span> -&gt;</span></span><br><span class="line">    <span class="keyword">try</span></span><br><span class="line">        ok = erpc:cast(Node, Mod, Fun, Args)</span><br><span class="line">    <span class="keyword">catch</span></span><br><span class="line">        error:&#123;erpc, badarg&#125; -&gt;</span><br><span class="line">            error(badarg)</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    <span class="literal">true</span>.</span><br><span class="line"></span><br><span class="line">erpc.erl</span><br><span class="line"><span class="function"><span class="title">cast</span><span class="params">(Node, Mod, Fun, Args)</span> <span class="title">when</span> <span class="title">is_atom</span><span class="params">(Node)</span>,</span></span><br><span class="line"><span class="function">                                <span class="title">is_atom</span><span class="params">(Mod)</span>,</span></span><br><span class="line"><span class="function">                                <span class="title">is_atom</span><span class="params">(Fun)</span>,</span></span><br><span class="line"><span class="function">                                <span class="title">is_list</span><span class="params">(Args)</span> -&gt;</span></span><br><span class="line">    _ = spawn_request(Node, ?MODULE, execute_cast, [Mod, Fun, Args],</span><br><span class="line">                      [&#123;reply, no&#125;]),</span><br><span class="line">    ok;</span><br><span class="line"></span><br><span class="line"><span class="comment">%% 自己节点 直接调用spawn_request</span></span><br><span class="line"><span class="function"><span class="title">spawn_request</span><span class="params">(N, M, F, A, O)</span> <span class="title">when</span> N =:= <span class="title">erlang</span>:<span class="title">node</span><span class="params">()</span> -&gt;</span></span><br><span class="line">    <span class="keyword">try</span></span><br><span class="line">        erlang:spawn_request(M, F, A, O)</span><br><span class="line">    <span class="keyword">catch</span></span><br><span class="line">        error:Err:Stk -&gt;</span><br><span class="line">            error_with_inherited_info(Err, [N, M, F, A, O], Stk)</span><br><span class="line">    <span class="keyword">end</span>;</span><br><span class="line"><span class="function"><span class="title">spawn_request</span><span class="params">(N, M, F, A, O)</span> -&gt;</span></span><br><span class="line">    <span class="keyword">case</span> erts_internal:dist_spawn_request(N, &#123;M, F, A&#125;, O, spawn_request) <span class="keyword">of</span></span><br><span class="line">        Ref <span class="keyword">when</span> erlang:is_reference(Ref) -&gt;</span><br><span class="line">            Ref;</span><br><span class="line">        badarg -&gt;</span><br><span class="line">            badarg_with_info([N, M, F, A, O])</span><br><span class="line">    <span class="keyword">end</span>.</span><br><span class="line"></span><br><span class="line">erlang.erl</span><br><span class="line"><span class="function"><span class="title">spawn_request</span><span class="params">(M, F, A, O)</span> -&gt;</span></span><br><span class="line">    <span class="keyword">case</span> erts_internal:spawn_request(M, F, A, O) <span class="keyword">of</span></span><br><span class="line">        Ref <span class="keyword">when</span> erlang:is_reference(Ref) -&gt;</span><br><span class="line">            Ref;</span><br><span class="line">        badopt -&gt;</span><br><span class="line">            badarg_with_cause([M, F, A, O], badopt);</span><br><span class="line">        badarg -&gt;</span><br><span class="line">            badarg_with_info([M, F, A, O])</span><br><span class="line">    <span class="keyword">end</span>.</span><br></pre></td></tr></table></figure>
-
-<p>综上所看 底层是调用erts_internal:spawn_request实现， 返回ref。 熟悉proc_lib 应该知道    使用ref可实现call。</p>
-<h1 id="2-send-2、send-3、apply、send-after介绍。"><a href="#2-send-2、send-3、apply、send-after介绍。" class="headerlink" title="2. send&#x2F;2、send&#x2F;3、apply、send_after介绍。"></a>2. send&#x2F;2、send&#x2F;3、apply、send_after介绍。</h1><h2 id="1-send-Pid-Msg"><a href="#1-send-Pid-Msg" class="headerlink" title="1.send(Pid, Msg)"></a>1.send(Pid, Msg)</h2><p>语法糖！。 向目标节点发送信息， 非阻塞。 目标者需要receive接收。</p>
-<h2 id="2-send-3-Pid-Msg-Options"><a href="#2-send-3-Pid-Msg-Options" class="headerlink" title="2.send&#x2F;3(Pid, Msg, Options)"></a>2.send&#x2F;3(Pid, Msg, Options)</h2><p>Options有两可选参数:</p>
-<p>​	nosuspend: 发送方一定要先挂起才能发送。</p>
-<p>​	noconnet: 目标节点一定要连接才可以发送。</p>
-<h3 id="3-apply"><a href="#3-apply" class="headerlink" title="3.apply"></a>3.apply</h3><p>直接调用，不需要接收消息。 阻塞</p>
-<h2 id="4-send-after-Time-Pid-Msg"><a href="#4-send-after-Time-Pid-Msg" class="headerlink" title="4.send_after(Time, Pid, Msg)"></a>4.send_after(Time, Pid, Msg)</h2><p>定时器消息发送。TIme后接收到Msg， 需要receive接收。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/17/project/notes/" data-id="cm9l3lew20000fouy5fdq0p0s" data-title="erlang杂记" class="article-share-link"><span class="fa fa-share">分享</span></a>
-      
-      
-      
-    </footer>
-  </div>
   
 </article>
-
-
-
-  
-    <article id="post-project/cache" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/04/15/project/cache/" class="article-date">
-  <time class="dt-published" datetime="2025-04-15T09:01:51.000Z" itemprop="datePublished">2025-04-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/15/project/cache/">缓存模块</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h1 id="1-缓存模块"><a href="#1-缓存模块" class="headerlink" title="1.缓存模块"></a>1.缓存模块</h1><p>打算以玩家缓存举例。</p>
-<p>玩家数据分为三个地方   1.玩家player 基于内存   2.ets缓存  3.mysql（dets）数据库</p>
-<p>玩家数据同时只会存在player 或者 ets中。</p>
-<p>流程如下：</p>
-<p><img src="/../../images/2.png" alt="2"></p>
-<p>介绍： </p>
-<p>​	1.第一次查先去dets查到，放入ets中，如果该字段有修改， 放入player，删除ets。</p>
-<p>​    2.落地就是五分钟定时器，刷到MySQL</p>
-<p>​	3.玩家下线 放入ets。</p>
-<h3 id="问题点："><a href="#问题点：" class="headerlink" title="问题点："></a>问题点：</h3><p>1.ets会不会很大， 因为玩家下线是存放到ets中， 确保下次查找快？</p>
-<p>​		答：应该并不会，每次重启的时候ets其实是空的， 对于流失玩家数据不会加载到ets。</p>
-<p>​		优化：①.既然觉得ets大，那每个cache进程起一个定时器（时间自己定）。以玩家为单位，每次更新获取当前时间戳。 当定时器到的时候，时间过久未变化的删除。</p>
-<p>​		            ②.灵感来源于 erlang内存管理，新生代老年代。对于ets数据引用 计数器，定时器也开启作用于数据 状态变化以及数据清除。</p>
-<p>2.既然数据存储于player 内存上，那player结构想必会很大。那方法调用，栈会不会很大效率低下？</p>
-<p>项目目前未发现问题。 但是注意点 不要将player结构用于进程传输， 这样会导致进程崩溃的。</p>
-<h3 id="3-缺点："><a href="#3-缺点：" class="headerlink" title="3.缺点："></a>3.缺点：</h3><p>1.所有玩家数据可能存在player或者ets中， 这样导致修数据的时候， 不能拿取整个ets操作。 需要构造玩家进程 再构造player。但是这种构造player其实不大，因为只加载必要数据。  但是还有一个问题，那就是老号的数据也加载进来了。ets有很多无用数据。</p>
-<h2 id="2-版本管理"><a href="#2-版本管理" class="headerlink" title="2.版本管理"></a>2.版本管理</h2><p>项目设计是一个功能一张表， 并没有使用一张表 player_id, data ，data序列化模式。 </p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/15/project/cache/" data-id="cm9ibshsr000124uy9l415e3z" data-title="缓存模块" class="article-share-link"><span class="fa fa-share">分享</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-project/summarize" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/04/15/project/summarize/" class="article-date">
-  <time class="dt-published" datetime="2025-04-15T08:47:42.000Z" itemprop="datePublished">2025-04-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/15/project/summarize/">跨服 活动 合服总结</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>浩浩荡荡写这么多， 我觉得精髓是这几个模块之间的联系。 如何高内聚低耦合</p>
-<h1 id="思考总结"><a href="#思考总结" class="headerlink" title="思考总结"></a>思考总结</h1><h2 id="1-我们跨服是周一进行跨服分组，那跨服活动是跨周的怎么办？"><a href="#1-我们跨服是周一进行跨服分组，那跨服活动是跨周的怎么办？" class="headerlink" title="1.我们跨服是周一进行跨服分组，那跨服活动是跨周的怎么办？"></a>1.我们跨服是周一进行跨服分组，那跨服活动是跨周的怎么办？</h2><p>解答：每一个活动有一个group_info字段，这里面记录的cross_group_info结构， 其中有svr_list。 又因为正在开启的活动这些数据不会变化。 所以不会影响本轮活动。</p>
-<h2 id="2-活动进程与跨服进程启动顺序是什么？有联系嘛？"><a href="#2-活动进程与跨服进程启动顺序是什么？有联系嘛？" class="headerlink" title="2.活动进程与跨服进程启动顺序是什么？有联系嘛？"></a>2.活动进程与跨服进程启动顺序是什么？有联系嘛？</h2><p>顺序 活动进程 -&gt; 跨服进行。</p>
-<p>首先获得进程会监听节点连接时间， 跨服活动会去同步。 如果是先开跨服， 跨服抛出的节点连接事件，活动进程可能还没开启，导致数据同步失败。</p>
-<h2 id="3-合服的节点-跨服组管理。"><a href="#3-合服的节点-跨服组管理。" class="headerlink" title="3.合服的节点 跨服组管理。"></a>3.合服的节点 跨服组管理。</h2><p>合服文章有说，但是设计方式还得理解。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/15/project/summarize/" data-id="cm9ibshsu000324uy4t95ew8t" data-title="跨服 活动 合服总结" class="article-share-link"><span class="fa fa-share">分享</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-project/merge" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/04/15/project/merge/" class="article-date">
-  <time class="dt-published" datetime="2025-04-15T08:12:34.000Z" itemprop="datePublished">2025-04-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/15/project/merge/">合服</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h1 id="1-合服"><a href="#1-合服" class="headerlink" title="1.合服"></a>1.合服</h1><p>合服主要分为两步：</p>
-<p>合服前: </p>
-<ol>
-<li>cowboy 关闭端口</li>
-<li>踢所有玩家下线</li>
-<li>关活动</li>
-<li>重开某些活动。</li>
-<li>清除老号</li>
-<li>删除cache中老号数据</li>
-<li>关游戏</li>
-</ol>
-<p>合服中</p>
-<ol>
-<li>运维修改游戏服配置， 可以取到 合服 和被合服</li>
-<li>将dets文件放入同一台机器， 使用open_file 打开被合服dets</li>
-<li>对应cache有单独处理方法，匹配实现。否则默认</li>
-</ol>
-<h1 id="2-注意点"><a href="#2-注意点" class="headerlink" title="2.注意点"></a>2.注意点</h1><p>1: 合服中  关活动如何确保活动全部关闭？</p>
-<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">活动关闭：cluster_lib:cast(MainId, &#123;?MODULE, close_activity, [Type, #&#123;before_merge =&gt; true&#125;]&#125;),</span><br><span class="line"><span class="function"><span class="title">received_result</span><span class="params">([])</span> -&gt;</span></span><br><span class="line">    ?INFO(<span class="string">&quot;received_result complete.&quot;</span>),</span><br><span class="line">    timer:sleep(<span class="number">5000</span>);</span><br><span class="line"><span class="function"><span class="title">received_result</span><span class="params">(ActList)</span> -&gt;</span></span><br><span class="line">    ?DEBUG(<span class="string">&quot;ActList ~w ~n&quot;</span>, [ActList]),</span><br><span class="line">    <span class="keyword">receive</span></span><br><span class="line">        &#123;apply, &#123;_, _, [#&#123;type := Type&#125;]&#125;&#125; -&gt;</span><br><span class="line">            received_result(lists:delete(Type, ActList))</span><br><span class="line">        <span class="keyword">after</span> <span class="number">10000</span> -&gt;</span><br><span class="line">            ?ERROR(<span class="string">&quot;~p: Timeout.&quot;</span>, [?FUNCTION_NAME])</span><br><span class="line">    <span class="keyword">end</span>.</span><br></pre></td></tr></table></figure>
-
-<p>ActList是所有活动。<br>该进程进行阻塞， 对应活动进程会收到消息，某活动处理完毕后会像合服进程发送完毕。</p>
-<p>注意点：跨服活动，只有主服才有消息。所以主服才监听跨服活动。</p>
-<p>同理： 合服中第三点 cache是否全部处理完 同方法。</p>
-<p>2.踢玩家下线，也需要确保嘛？</p>
-<p>不需要，正常活动结束的时候，玩家也可能也在线。 我想活动全部关闭了，不可能玩家还没踢下去把。</p>
-<p>3.重开某些活动怎么实现的？</p>
-<p>只要删除活动对应cache就行。 逻辑：再次开服的时候， 活动进程一定会开启，活动那边就会检测需要重开的活动type，因为cache被删除就会重新加载。</p>
-<p>4.上面这么多逻辑，对于跨服组信息好像没处理？ 怎么实现的？</p>
-<p>在跨服分组那边节点连接中心节点时， 会携带被合服的组（被合掉的服 不可能再重启了）。 比对新老合服信息。 把多余服进行节点删除。中心服操作（具体可看跨服重组那边）。</p>
-<p>5.为什么不合服前的时候处理呢？这样就不需要每次连接校验被合服了。怎么处理？</p>
-<p>跨服组信息需要在中心服处理，所以需要运维在中心服设置配置， 合服 -&gt; 被合服。</p>
-<p>然后中心服什么时候处理呢？按照旧逻辑 应该是开服的时候。  </p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/15/project/merge/" data-id="cm9ibshst000224uy5g3og1vz" data-title="合服" class="article-share-link"><span class="fa fa-share">分享</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-project/activity" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/04/15/project/activity/" class="article-date">
-  <time class="dt-published" datetime="2025-04-15T06:16:58.000Z" itemprop="datePublished">2025-04-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/15/project/activity/">活动模块</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h1 id="1-数据结构"><a href="#1-数据结构" class="headerlink" title="1.数据结构"></a>1.数据结构</h1><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">后台活动 和 本地活动同一个结构</span><br><span class="line"><span class="keyword">-record</span><span class="params">(activity, &#123;</span></span><br><span class="line"><span class="params">    type</span></span><br><span class="line"><span class="params">    ,id = <span class="number">0</span></span></span><br><span class="line"><span class="params">    ,start_time = <span class="number">0</span></span></span><br><span class="line"><span class="params">    ,close_time = <span class="number">0</span></span></span><br><span class="line"><span class="params">    ,status = ?ACT_STATUS_CLOSE        <span class="comment">% 活动开启状态</span></span></span><br><span class="line"><span class="params">    ,local_type :: local_type()</span></span><br><span class="line"><span class="params">    ,cross_type :: cross_group_type()       <span class="comment">% 跨服类型</span></span></span><br><span class="line"><span class="params">    ,group_info                             <span class="comment">% 跨服信息</span></span></span><br><span class="line"><span class="params">    ,times = <span class="number">0</span>                              <span class="comment">% 表示循环的活动已经执行了 第几次了  从 0 开始</span></span></span><br><span class="line"><span class="params">    ,round = <span class="number">0</span>                              <span class="comment">% 有些循环的奖励，表示当前是 第一个循环</span></span></span><br><span class="line"><span class="params">    ...</span></span><br><span class="line"><span class="params">&#125;)</span>.</span><br></pre></td></tr></table></figure>
-
-<h2 id="1-reload-activity-加载活动接口"><a href="#1-reload-activity-加载活动接口" class="headerlink" title="1.reload_activity 加载活动接口"></a>1.reload_activity 加载活动接口</h2><p>流程如下：</p>
-<p><img src="/../../images/1.png" alt="1"></p>
-<p>1.此接口复用高，  进程init使用、跨服组变化、0点事件、等。</p>
-<h1 id="1-init"><a href="#1-init" class="headerlink" title="1.init"></a>1.init</h1><p>1.监听事件， 0点、配置加载、节点连接、组信息变化。</p>
-<p>2.init所有活动。</p>
-<ol>
-<li>先删除本地所有后台活动，再从数据库查询所有后台活动。（实现更新）</li>
-<li>开启所有状态为开启的活动。 根据当前时间设置状态和定时器（只设置当日的， 因为有0点事件）</li>
-<li>reload_activity</li>
-</ol>
-<p>3.对于跨服活动。1.游戏服是主服，下发到子服。 2.游戏服是子服请求</p>
-<p>​	注意：开服的时候，所有游戏服是无规则开启的。 在第三步同步的时候，很可能其他服未开启，导致同步失败。  </p>
-<p>​	解决办法：第一步中 有监听事件节点连接。   节点连接的时候，会去分发或者请求的。</p>
-<h2 id="2-group-update-组变化"><a href="#2-group-update-组变化" class="headerlink" title="2. group_update 组变化"></a>2. group_update 组变化</h2><p>这个是事件，携带变化的组信息。 重新加载一下活动。 主要是加载未开启，因为已开启的活动数据不会再改变。</p>
-<p>未开启活动，检测所有条件，然后检测当前状态，就抛出开启事件。</p>
-<p>疑问：对于一个跨服活动，最开始未开启设置开启定时器，然后跨服信息未满足，导致未开启。然后组信息变化。这样活动开启是不是直接跳到活动某个阶段（活动开启也分多种  预备期 展示期）。  这样正常嘛？</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>1.对于活动来说， 着重点主要是活动开启，状态变化， 0点，和 跨服组变化。</p>
-<p>2.注意点是 关服开服时间长， 对于开服时 对于旧活动处理。，</p>
-<p>3.单个活动 数据的安全性， 对于跨服活动， 跨服组信息变化。 跨周活动。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/15/project/activity/" data-id="cm9ibshsn000024uyel403aa6" data-title="活动模块" class="article-share-link"><span class="fa fa-share">分享</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-project/title" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/04/15/project/title/" class="article-date">
-  <time class="dt-published" datetime="2025-04-15T02:00:13.000Z" itemprop="datePublished">2025-04-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/04/15/project/title/">跨服分组</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h1 id="1-类型"><a href="#1-类型" class="headerlink" title="1.类型"></a>1.类型</h1><p>分为：中心服和游戏服</p>
-<p>作用：</p>
-<p>​		1.中心服：负责跨服分组，同步游戏服</p>
-<p>​		2.游戏服：游戏业务玩法。后台对接等。</p>
-<p>连接方式：游戏服与中心服互联，游戏服之间也互联。 </p>
-<p>​		实现:有一张ets_svr_to_node表，每一个服都存在。由中心服同步。</p>
-<p>​		调用方式：rpc</p>
-<h1 id="2-数据结构"><a href="#2-数据结构" class="headerlink" title="2.数据结构"></a>2.数据结构</h1><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">// 节点信息</span><br><span class="line"><span class="keyword">-record</span><span class="params">(server_node_info, &#123;</span></span><br><span class="line"><span class="params">    svr_id = <span class="number">0</span>                      <span class="comment">% &#x27;服务器id&#x27;</span></span></span><br><span class="line"><span class="params">    , score = <span class="number">0</span>                     <span class="comment">% &#x27;服务器评分&#x27;</span></span></span><br><span class="line"><span class="params">    , merge_ids = []                <span class="comment">% &#x27;被合服id&#x27;</span></span></span><br><span class="line"><span class="params">    , group_info = #&#123;&#125;              <span class="comment">% &#x27;分组信息&#x27;</span></span></span><br><span class="line"><span class="params">    ....</span></span><br><span class="line"><span class="params">&#125;)</span>.</span><br><span class="line">// 组信息</span><br><span class="line"><span class="keyword">-record</span><span class="params">(cross_group_info, &#123;</span></span><br><span class="line"><span class="params">    key                             <span class="comment">% 唯一key &#123;type, group_id&#125;</span></span></span><br><span class="line"><span class="params">    , type = ?CROSS_GROUP_TYPE_PAIR <span class="comment">% 类型</span></span></span><br><span class="line"><span class="params">    , group_id = <span class="number">0</span>                  <span class="comment">% 组id</span></span></span><br><span class="line"><span class="params">    , main_id = <span class="number">0</span>                   <span class="comment">% 主服 id</span></span></span><br><span class="line"><span class="params">    , svr_list = []                 <span class="comment">% 游戏服id</span></span></span><br><span class="line"><span class="params">    , child_list = []               <span class="comment">% 子分组id</span></span></span><br><span class="line"><span class="params">    , next_child = []               <span class="comment">% 下次子分组id</span></span></span><br><span class="line"><span class="params">    , parent_list = #&#123;&#125;             <span class="comment">% 父分组id #&#123;type =&gt; ParentGroupId&#125;</span></span></span><br><span class="line"><span class="params">    ...</span></span><br><span class="line"><span class="params">&#125;)</span>.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//组类型 构成</span><br><span class="line">小组 -&gt; 游戏服</span><br><span class="line">大组 -&gt; 小组</span><br><span class="line">聊天组 -&gt; 游戏服</span><br></pre></td></tr></table></figure>
-
-<h1 id="3-中心服逻辑"><a href="#3-中心服逻辑" class="headerlink" title="3.中心服逻辑"></a>3.中心服逻辑</h1><h2 id="1-游戏服连接-nodeconnect"><a href="#1-游戏服连接-nodeconnect" class="headerlink" title="1.游戏服连接(nodeconnect)"></a>1.游戏服连接(nodeconnect)</h2><ol>
-<li>携带nodeinfo信息，主要服务器id，node节点、合服ids等。</li>
-<li>查询该游戏服旧数据，主要是比较新旧合服信息。（由差异 被合服走游戏服删除逻辑）</li>
-<li>遍历所有游戏服类型（聊天组、大组等）， 但是连接只会加入聊天组。</li>
-<li>同步信息到其他游戏服。先同步自己服</li>
-</ol>
-<h2 id="2-游戏服退出、删除"><a href="#2-游戏服退出、删除" class="headerlink" title="2.游戏服退出、删除"></a>2.游戏服退出、删除</h2><p>接口有游戏服退出和删除。</p>
-<p>退出：</p>
-<p>1.遍历所有需要退出的组。（从小到大）</p>
-<p>2.需要比较组的子分组是什么类型， </p>
-<p>​	2.1.游戏服，组信息直接删除。</p>
-<p>​	2.2.小组等多种游戏服集合的。 寻找该组的父组， 也去删除。</p>
-<p>3.通知自己节点更新。</p>
-<h2 id="3-每日刷新"><a href="#3-每日刷新" class="headerlink" title="3.每日刷新"></a>3.每日刷新</h2><ol>
-<li>检测游戏服分数， 满足分数的加入组。</li>
-<li>因为节点连接加入了聊天组， 只需要加入 小组 -&gt; 大组</li>
-<li>星期一， 跨服分组<ol>
-<li>删除游戏服所有组信息，组信息删除。</li>
-<li>获取所有节点，进行跨服分组。</li>
-</ol>
-</li>
-<li>检测活动开启</li>
-<li>同步所有信息。</li>
-</ol>
-<p>思考：</p>
-<p>1.对于组结构中有svr_list字段，是所有节点的id。 在游戏服退出删除的时候， 在组信息中也需要删除，则需要遍历所有该游戏服所有组。</p>
-<p>优化1：对于组信息的子分组不是游戏服的时候， 只存储子分组的组id，这样删除退出操作，只需要删除组类型的子分组是游戏服的。</p>
-<p>缺点：查询的时候需要递归查询。</p>
-<p>2.周一跨服重组的时候，会刷新活动，如果活动是小组、大组并且跨周的时候。怎么处理？</p>
-<p> 解决：活动那边在活动初始化的时候，存储cross_group_info信息。 跨服组变化的时候 不会改变正在进行的活动。</p>
-<h1 id="4-游戏服逻辑"><a href="#4-游戏服逻辑" class="headerlink" title="4. 游戏服逻辑"></a>4. 游戏服逻辑</h1><h2 id="1-init"><a href="#1-init" class="headerlink" title="1.init"></a>1.init</h2><p>1.连接中心服。 携带分数</p>
-<h2 id="2-nodedown"><a href="#2-nodedown" class="headerlink" title="2.nodedown"></a>2.nodedown</h2><p>1.抛断线事件</p>
-<p>2.设置重连定时器</p>
-<h2 id="2-sync-node-info（节点信息更新）"><a href="#2-sync-node-info（节点信息更新）" class="headerlink" title="2.sync_node_info（节点信息更新）"></a>2.sync_node_info（节点信息更新）</h2><h3 id="1-type-new"><a href="#1-type-new" class="headerlink" title="1.type &#x3D; new"></a>1.type &#x3D; new</h3><p>1.自己节点连上。设置定时器，更新分数</p>
-<p>2.比较新旧组信息</p>
-<h3 id="2-type-update"><a href="#2-type-update" class="headerlink" title="2.type&#x3D;update"></a>2.type&#x3D;update</h3><p>1.主要是更新自己节点组信息</p>
-<p>2.比较新旧组信息</p>
-<h3 id="3-type-add"><a href="#3-type-add" class="headerlink" title="3.type&#x3D;add"></a>3.type&#x3D;add</h3><p>有新节点连接，抛事件</p>
-<h2 id="2-存储组信息"><a href="#2-存储组信息" class="headerlink" title="2. 存储组信息"></a>2. 存储组信息</h2><p>单独游戏服 只会存储自己所属组的 组信息。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/04/15/project/title/" data-id="cm9ibshsv000424uy9h7pdt7f" data-title="跨服分组" class="article-share-link"><span class="fa fa-share">分享</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
 </section>
