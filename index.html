@@ -75,6 +75,57 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-project/notes" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/04/17/project/notes/" class="article-date">
+  <time class="dt-published" datetime="2025-04-17T07:25:51.000Z" itemprop="datePublished">2025-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2025/04/17/project/notes/">erlang杂记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="1-rpc-cast-与-call"><a href="#1-rpc-cast-与-call" class="headerlink" title="1.rpc:cast 与 call"></a>1.rpc:cast 与 call</h1><p>启动一个rex的gen_server进程。</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">-define</span><span class="params">(NAME, rex)</span>.</span><br><span class="line"><span class="function"><span class="title">start</span><span class="params">()</span> -&gt;</span></span><br><span class="line">    gen_server:start(&#123;local,?NAME&#125;, ?MODULE, [], ?SPAWN_OPTS).</span><br></pre></td></tr></table></figure>
+
+<p>以cast举例</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">rpc.erl</span><br><span class="line"><span class="function"><span class="title">cast</span><span class="params">(Node, Mod, Fun, Args)</span> -&gt;</span></span><br><span class="line">    <span class="keyword">try</span></span><br><span class="line">        ok = erpc:cast(Node, Mod, Fun, Args)</span><br><span class="line">    <span class="keyword">catch</span></span><br><span class="line">        error:&#123;erpc, badarg&#125; -&gt;</span><br><span class="line">            error(badarg)</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    <span class="literal">true</span>.</span><br><span class="line"></span><br><span class="line">erpc.erl</span><br><span class="line"><span class="function"><span class="title">cast</span><span class="params">(Node, Mod, Fun, Args)</span> <span class="title">when</span> <span class="title">is_atom</span><span class="params">(Node)</span>,</span></span><br><span class="line"><span class="function">                                <span class="title">is_atom</span><span class="params">(Mod)</span>,</span></span><br><span class="line"><span class="function">                                <span class="title">is_atom</span><span class="params">(Fun)</span>,</span></span><br><span class="line"><span class="function">                                <span class="title">is_list</span><span class="params">(Args)</span> -&gt;</span></span><br><span class="line">    _ = spawn_request(Node, ?MODULE, execute_cast, [Mod, Fun, Args],</span><br><span class="line">                      [&#123;reply, no&#125;]),</span><br><span class="line">    ok;</span><br><span class="line"></span><br><span class="line"><span class="comment">%% 自己节点 直接调用spawn_request</span></span><br><span class="line"><span class="function"><span class="title">spawn_request</span><span class="params">(N, M, F, A, O)</span> <span class="title">when</span> N =:= <span class="title">erlang</span>:<span class="title">node</span><span class="params">()</span> -&gt;</span></span><br><span class="line">    <span class="keyword">try</span></span><br><span class="line">        erlang:spawn_request(M, F, A, O)</span><br><span class="line">    <span class="keyword">catch</span></span><br><span class="line">        error:Err:Stk -&gt;</span><br><span class="line">            error_with_inherited_info(Err, [N, M, F, A, O], Stk)</span><br><span class="line">    <span class="keyword">end</span>;</span><br><span class="line"><span class="function"><span class="title">spawn_request</span><span class="params">(N, M, F, A, O)</span> -&gt;</span></span><br><span class="line">    <span class="keyword">case</span> erts_internal:dist_spawn_request(N, &#123;M, F, A&#125;, O, spawn_request) <span class="keyword">of</span></span><br><span class="line">        Ref <span class="keyword">when</span> erlang:is_reference(Ref) -&gt;</span><br><span class="line">            Ref;</span><br><span class="line">        badarg -&gt;</span><br><span class="line">            badarg_with_info([N, M, F, A, O])</span><br><span class="line">    <span class="keyword">end</span>.</span><br><span class="line"></span><br><span class="line">erlang.erl</span><br><span class="line"><span class="function"><span class="title">spawn_request</span><span class="params">(M, F, A, O)</span> -&gt;</span></span><br><span class="line">    <span class="keyword">case</span> erts_internal:spawn_request(M, F, A, O) <span class="keyword">of</span></span><br><span class="line">        Ref <span class="keyword">when</span> erlang:is_reference(Ref) -&gt;</span><br><span class="line">            Ref;</span><br><span class="line">        badopt -&gt;</span><br><span class="line">            badarg_with_cause([M, F, A, O], badopt);</span><br><span class="line">        badarg -&gt;</span><br><span class="line">            badarg_with_info([M, F, A, O])</span><br><span class="line">    <span class="keyword">end</span>.</span><br></pre></td></tr></table></figure>
+
+<p>综上所看 底层是调用erts_internal:spawn_request实现， 返回ref。 熟悉proc_lib 应该知道    使用ref可实现call。</p>
+<h1 id="2-send-2、send-3、apply、send-after介绍。"><a href="#2-send-2、send-3、apply、send-after介绍。" class="headerlink" title="2. send&#x2F;2、send&#x2F;3、apply、send_after介绍。"></a>2. send&#x2F;2、send&#x2F;3、apply、send_after介绍。</h1><h2 id="1-send-Pid-Msg"><a href="#1-send-Pid-Msg" class="headerlink" title="1.send(Pid, Msg)"></a>1.send(Pid, Msg)</h2><p>语法糖！。 向目标节点发送信息， 非阻塞。 目标者需要receive接收。</p>
+<h2 id="2-send-3-Pid-Msg-Options"><a href="#2-send-3-Pid-Msg-Options" class="headerlink" title="2.send&#x2F;3(Pid, Msg, Options)"></a>2.send&#x2F;3(Pid, Msg, Options)</h2><p>Options有两可选参数:</p>
+<p>​	nosuspend: 发送方一定要先挂起才能发送。</p>
+<p>​	noconnet: 目标节点一定要连接才可以发送。</p>
+<h3 id="3-apply"><a href="#3-apply" class="headerlink" title="3.apply"></a>3.apply</h3><p>直接调用，不需要接收消息。 阻塞</p>
+<h2 id="4-send-after-Time-Pid-Msg"><a href="#4-send-after-Time-Pid-Msg" class="headerlink" title="4.send_after(Time, Pid, Msg)"></a>4.send_after(Time, Pid, Msg)</h2><p>定时器消息发送。TIme后接收到Msg， 需要receive接收。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2025/04/17/project/notes/" data-id="cm9l3lew20000fouy5fdq0p0s" data-title="erlang杂记" class="article-share-link"><span class="fa fa-share">分享</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-project/cache" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2025/04/15/project/cache/" class="article-date">
@@ -419,6 +470,10 @@
       <ul>
         
           <li>
+            <a href="/2025/04/17/project/notes/">erlang杂记</a>
+          </li>
+        
+          <li>
             <a href="/2025/04/15/project/cache/">缓存模块</a>
           </li>
         
@@ -432,10 +487,6 @@
         
           <li>
             <a href="/2025/04/15/project/activity/">活动模块</a>
-          </li>
-        
-          <li>
-            <a href="/2025/04/15/project/title/">跨服分组</a>
           </li>
         
       </ul>
