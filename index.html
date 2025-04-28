@@ -158,6 +158,23 @@
 <p>​	noconnet: 目标节点一定要连接才可以发送。</p>
 <h3 id="3-apply"><a href="#3-apply" class="headerlink" title="3.apply"></a>3.apply</h3><p>直接调用，不需要接收消息。 阻塞</p>
 <h2 id="4-send-after-Time-Pid-Msg"><a href="#4-send-after-Time-Pid-Msg" class="headerlink" title="4.send_after(Time, Pid, Msg)"></a>4.send_after(Time, Pid, Msg)</h2><p>定时器消息发送。TIme后接收到Msg， 需要receive接收。</p>
+<h1 id="3-io-format"><a href="#3-io-format" class="headerlink" title="3. io:format"></a>3. io:format</h1><p>主要用于格式化输出数据。	</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">%% 各参数介绍</span><br><span class="line">~s  -- 字符串   不是则会报错</span><br><span class="line">~p  -- 输出任意形式 常用于调试</span><br><span class="line">~w  -- 与~p类似 输出格式更加紧凑 不会格外空格 换行符</span><br><span class="line">~ts -- 输出二进制</span><br><span class="line">~B  -- 整数转二进制</span><br><span class="line">~o  -- 八进制</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-尾递归"><a href="#4-尾递归" class="headerlink" title="4.尾递归"></a>4.尾递归</h1><p><strong>普通递归：</strong></p>
+<p>举例： 求列表长度</p>
+<p><img src="/../../images/3.png" alt="3"></p>
+<p><img src="/../../images/4.png" alt="3"></p>
+<p>像上续做法，对于短列表还好，但是当列表长度上百万时，操作链长度变很长。 调用栈会不断增加，可能操作栈溢出。</p>
+<p><strong>尾递归：</strong></p>
+<p>我们可以增加一个参数， 用来存储值</p>
+<p><img src="/../../images/5.png" alt="3"></p>
+<p>极大的简化了操作链。</p>
+<p><strong>尾递归优化（TRO）：</strong></p>
+<p>虚拟机VM看到一个函数在尾部调用自身的时候，他会清除当前的栈帧。所以尾递归也不会使调用栈累计叠加。</p>
+<p><strong>扩展</strong>：</p>
+<p>当函数体最后是调用其他函数时， 会迚行 LCO。（类似TRO）</p>
+<p>例如： a() -&gt; b(). b() -&gt; c(). c()-&gt;a().  这样的一个无限循环，但是不会导致内存耗尽。</p>
 
       
     </div>
