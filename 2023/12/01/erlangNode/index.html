@@ -27,15 +27,15 @@
 <meta property="og:site_name" content="胡上彪&#96;s Blog">
 <meta property="og:description" content="概述erlang node study">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://github.com/pic/erlangNode/img_7.jpg">
-<meta property="og:image" content="https://github.com/pic/erlangNode/img_3.jpg">
-<meta property="og:image" content="https://github.com/pic/erlangNode/img_8.jpg">
+<meta property="og:image" content="https://github.com/mychen-1/mychen-1.github.io.git/pic/erlangNode/img_7.jpg">
+<meta property="og:image" content="https://github.com/mychen-1/mychen-1.github.io.git/pic/erlangNode/img_3.jpg">
+<meta property="og:image" content="https://github.com/mychen-1/mychen-1.github.io.git/pic/erlangNode/img_8.jpg">
 <meta property="article:published_time" content="2023-12-01T14:21:13.000Z">
 <meta property="article:modified_time" content="2024-09-04T15:39:29.524Z">
 <meta property="article:author" content="胡上彪">
 <meta property="article:tag" content="erlang">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://github.com/pic/erlangNode/img_7.jpg">
+<meta name="twitter:image" content="https://github.com/mychen-1/mychen-1.github.io.git/pic/erlangNode/img_7.jpg">
 
 <link rel="canonical" href="https://github.com/mychen-1/mychen-1.github.io.git/2023/12/01/erlangNode/">
 
@@ -231,7 +231,7 @@
 <h3 id="不连接-直接给在本地注册名字的节点发消息"><a href="#不连接-直接给在本地注册名字的节点发消息" class="headerlink" title="不连接 直接给在本地注册名字的节点发消息"></a>不连接 直接给在本地注册名字的节点发消息</h3><p>此时两个节点的cookie是一样的</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">erlang:get_cookie().</span><br><span class="line">erlang:register(uzi,self()).</span><br><span class="line">global:register_name(uzi, self()).</span><br><span class="line">fries 下执行</span><br><span class="line">&#123;uzi,&#x27;fries@127.0.0.1&#x27;&#125; ! &#123;hello_local,from_fries,self()&#125;.</span><br></pre></td></tr></table></figure>
 <p>1.可以用一个一模一样的名字在本地和全局同时注册<br>2.!操作符传注册名的话只能收到本地注册名的消息<br>3.上面可以收到消息是因为在本地注册了uzi erlang:register(uzi,self())<br>4.如果 不在本地注册uzi只全局注册global:register_name(uzi, self()).<br>这样在K节点向F节点发送消息F节点是收不到的,如果只想向一个全局注册的名字进程发送消息需要<br>取到pid比如global:whereis_name(uzi) ! {hello_global,from_fries,self()}.</p>
-<p><img src="/pic/erlangNode/img_7.jpg" alt="img_7.jpg"></p>
+<p><img src="/mychen-1/mychen-1.github.io.git/pic/erlangNode/img_7.jpg" alt="img_7.jpg"></p>
 <p>给K节点发</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;uzi,&#x27;ketchup@127.0.0.1&#x27;&#125; ! &#123;hello_ketchup,from_fries,self()&#125;.</span><br></pre></td></tr></table></figure>
 <p>也可以收到消息</p>
@@ -239,7 +239,7 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">net_adm:ping(&#x27;fries@127.0.0.1&#x27;).</span><br></pre></td></tr></table></figure>
 
 
-<h3 id="global注册"><a href="#global注册" class="headerlink" title="global注册"></a>global注册</h3><p>ketchup节点在不知道fries节点的node_name<br>可以通过fries节点全局注册的global_name给fries节点发消息<br><img src="/pic/erlangNode/img_3.jpg" alt="img_3.jpg"><br>fries节点 通过 ketchup节点node_name给ketchup节点发送消息<br><img src="/pic/erlangNode/img_8.jpg" alt="img_8.jpg"></p>
+<h3 id="global注册"><a href="#global注册" class="headerlink" title="global注册"></a>global注册</h3><p>ketchup节点在不知道fries节点的node_name<br>可以通过fries节点全局注册的global_name给fries节点发消息<br><img src="/mychen-1/mychen-1.github.io.git/pic/erlangNode/img_3.jpg" alt="img_3.jpg"><br>fries节点 通过 ketchup节点node_name给ketchup节点发送消息<br><img src="/mychen-1/mychen-1.github.io.git/pic/erlangNode/img_8.jpg" alt="img_8.jpg"></p>
 <p>所有的操作都需要两个节点连在一起</p>
 
     </div>
