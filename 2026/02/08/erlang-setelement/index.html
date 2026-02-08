@@ -20,16 +20,22 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="陈志伟&#96;s Blog">
-<meta property="og:url" content="http://example.com/archives/2026/index.html">
+  <meta name="description" content="概述神奇发现– 按照升序倒序使用，效率居然不一样">
+<meta property="og:type" content="article">
+<meta property="og:title" content="setelement接口">
+<meta property="og:url" content="http://example.com/2026/02/08/erlang-setelement/index.html">
 <meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="概述神奇发现– 按照升序倒序使用，效率居然不一样">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="c:\Users\gz0663\Desktop\1\20251113142701380cc7d7c8e95a0f30b6ef7a74c87c46.png">
+<meta property="article:published_time" content="2026-02-08T03:35:21.000Z">
+<meta property="article:modified_time" content="2026-02-08T03:36:21.782Z">
 <meta property="article:author" content="陈志伟">
 <meta property="article:tag" content="adawdawd">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="c:\Users\gz0663\Desktop\1\20251113142701380cc7d7c8e95a0f30b6ef7a74c87c46.png">
 
-<link rel="canonical" href="http://example.com/archives/2026/">
+<link rel="canonical" href="http://example.com/2026/02/08/erlang-setelement/">
 
 
 <script id="page-configurations">
@@ -37,12 +43,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>归档 | 陈志伟`s Blog</title>
+  <title>setelement接口 | 陈志伟`s Blog</title>
   
 
 
@@ -146,210 +152,146 @@
         <div class="content-wrap">
           
 
-          <div class="content archive">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">嗯..! 目前共计 10 篇日志。 继续努力。</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/08/erlang-setelement/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陈志伟">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="陈志伟`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          setelement接口
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-02-08 11:35:21 / 修改时间：11:36:21" itemprop="dateCreated datePublished" datetime="2026-02-08T11:35:21+08:00">2026-02-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2026</span>
-    </div>
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>神奇发现– 按照升序倒序使用，效率居然不一样</p>
+<span id="more"></span>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:39:16+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/operating-system/" itemprop="url">
-            <span itemprop="name">操作系统基本介绍</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:37:38+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/erlang-%E6%9D%82%E8%AE%B0/" itemprop="url">
-            <span itemprop="name">erlang 杂记</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:36:52+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/tcp-http-websocket/" itemprop="url">
-            <span itemprop="name">tcp,http,websocket差异</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:35:21+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/erlang-setelement/" itemprop="url">
-            <span itemprop="name">setelement接口</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:34:07+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/mysql-sql/" itemprop="url">
-            <span itemprop="name">数据库命令</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:32:50+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/erlang-node/" itemprop="url">
-            <span itemprop="name">erlang节点-分布式</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:31:37+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/erlang-timer/" itemprop="url">
-            <span itemprop="name">erlang定时器</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-08T11:30:04+08:00"
-              content="2026-02-08">
-          02-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/08/behavior-tree/" itemprop="url">
-            <span itemprop="name">行为树介绍</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2026-02-06T17:48:49+08:00"
-              content="2026-02-06">
-          02-06
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2026/02/06/inetpacket/" itemprop="url">
-            <span itemprop="name">inetpacket</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
+<h3 id="1-文档"><a href="#1-文档" class="headerlink" title="1.文档"></a>1.文档</h3><p>在官方文档中有一个有趣现象， 升序和降序调用效率居然会不一样。</p>
+<p><img src="C:\Users\gz0663\Desktop\1\20251113142701380cc7d7c8e95a0f30b6ef7a74c87c46.png" alt="20251113142701380cc7d7c8e95a0f30b6ef7a74c87c46"></p>
+<p>第三点： todo 截图。</p>
+<p>大致意思， 使用降序， 只会拷贝几次元组。但是升序每次执行都会。  </p>
+<h3 id="2-写测试案例。"><a href="#2-写测试案例。" class="headerlink" title="2.写测试案例。"></a>2.写测试案例。</h3><p>从图可以看出， 升序比降序慢一倍左右。  去看一下 setelement源码</p>
+<p>看得出 每次setelement都会拷贝， 那降序怎么做到的呢?   百思不得其解。 突然想到可以看 编译的汇编语言。</p>
+<h3 id="3-查看汇编"><a href="#3-查看汇编" class="headerlink" title="3.查看汇编"></a>3.查看汇编</h3><p>命令 ：c(mod, [‘S’]).</p>
+<p>从图中可以看到 test 和 test1生成汇编明显不一样。 细看区别。</p>
+<p>降序test， 前面调用2次 setelement 后面 是用 set_tuple_element.</p>
+<p>升序test1每次执行 都是setelement。</p>
+<p>看set_tuple_element源码：</p>
+<p>直接将下表指针地址的值覆盖。效率 	O（1）, 无内存开辟。</p>
+<p>（这里也知道， erlang元组的连续空间实现， 是用了一层列表里面是指针， 指针连续， 值分散）</p>
+<p>这里就豁然开朗了。</p>
+<h3 id="3-总结。"><a href="#3-总结。" class="headerlink" title="3.总结。"></a>3.总结。</h3><p>erlang元组连续实现原理， 由一个块连续的地址实现。</p>
+<p>升序 ，每次调用c层 setelement</p>
+<p>降序，前2次调用 setelement， 后续都是调用 set_tuple_element.</p>
+<p>ps:后续erlang26版本， 官方文档没有这个了。</p>
 
     </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="陈志伟 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="陈志伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
   </div>
-  
-  
-  
+</div>
 
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>陈志伟
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2026/02/08/erlang-setelement/" title="setelement接口">http://example.com/2026/02/08/erlang-setelement/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/02/08/mysql-sql/" rel="prev" title="数据库命令">
+      <i class="fa fa-chevron-left"></i> 数据库命令
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2026/02/08/tcp-http-websocket/" rel="next" title="tcp,http,websocket差异">
+      tcp,http,websocket差异 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
 
@@ -402,6 +344,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%96%87%E6%A1%A3"><span class="nav-number">1.0.1.</span> <span class="nav-text">1.文档</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%86%99%E6%B5%8B%E8%AF%95%E6%A1%88%E4%BE%8B%E3%80%82"><span class="nav-number">1.0.2.</span> <span class="nav-text">2.写测试案例。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%9F%A5%E7%9C%8B%E6%B1%87%E7%BC%96"><span class="nav-number">1.0.3.</span> <span class="nav-text">3.查看汇编</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%80%BB%E7%BB%93%E3%80%82"><span class="nav-number">1.0.4.</span> <span class="nav-text">3.总结。</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

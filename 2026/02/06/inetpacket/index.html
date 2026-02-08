@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述该篇主要讲解inet:setopts 中packet参数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="inetpacket">
+<meta property="og:url" content="http://example.com/2026/02/06/inetpacket/index.html">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="概述该篇主要讲解inet:setopts 中packet参数">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-02-06T09:48:49.000Z">
+<meta property="article:modified_time" content="2026-02-08T03:04:12.624Z">
+<meta property="article:author" content="陈志伟">
+<meta property="article:tag" content="adawdawd">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2026/02/06/inetpacket/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>inetpacket | 陈志伟`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">陈志伟`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">你好啊文斯</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/06/inetpacket/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陈志伟">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="陈志伟`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          inetpacket
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2026-02-06 17:48:49" itemprop="dateCreated datePublished" datetime="2026-02-06T17:48:49+08:00">2026-02-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-02-08 11:04:12" itemprop="dateModified" datetime="2026-02-08T11:04:12+08:00">2026-02-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>该篇主要讲解inet:setopts 中packet参数</p>
+<span id="more"></span>
+
+
+<h2 id="1-packet可选模式"><a href="#1-packet可选模式" class="headerlink" title="1. packet可选模式"></a>1. packet可选模式</h2><p>官方文档过长，大致意义介绍</p>
+<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">raw | 0</span><br><span class="line">没有封包，即不管数据包头，而是根据Length参数接收数据。</span><br><span class="line"></span><br><span class="line">1 | 2 | 4</span><br><span class="line">表示包头的长度，分别是1,2,4个字节（2,4以大端字节序，无符号表示），当设置了此参数时，接收到数据后将自动剥离对应长度的头部，只保留Body。</span><br><span class="line"></span><br><span class="line">asn1 | cdr | sunrm | fcgi |tpkt|line</span><br><span class="line">设置以上参数时，应用程序将保证数据包头部的正确性，但是在gen<span class="built_in">_</span>tcp:recv/2,3接收到的数据包中并不剥离头部。</span><br><span class="line"></span><br><span class="line">http | http<span class="built_in">_</span>bin</span><br><span class="line">设置以上参数，收到的数据将被erlang:decode<span class="built_in">_</span>packet/3格式化，在被动模式下将收到&#123;ok, HttpPacket&#125;,主动模式下将收到&#123;http, Socket, HttpPacket&#125;.  </span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="1-1这里格外介绍一下-主动模式和被动模式"><a href="#1-1这里格外介绍一下-主动模式和被动模式" class="headerlink" title="1.1这里格外介绍一下 主动模式和被动模式"></a>1.1这里格外介绍一下 主动模式和被动模式</h3><p>inet:setopts 中 active 参数控制。</p>
+<p>区别：</p>
+<p>被动模式：Tcp消息到达时， 有一个缓存队列缓存数据， 需要应用层主动调用  gen_tcp:recv获取</p>
+<p>主动模式：消息到达时，直接返回应用层。</p>
+<h2 id="2各模式区别？"><a href="#2各模式区别？" class="headerlink" title="2各模式区别？"></a>2各模式区别？</h2><p>1： 是否需要管理包头数据， packet：raw|0, 需要应用层管理包头， 每次recv是获取全部数据， packet:1|2|4， 是erlang虚拟机会自我筛选掉包头， 每次拿取只有boby。</p>
+<h3 id="2-1案例实现"><a href="#2-1案例实现" class="headerlink" title="2.1案例实现"></a>2.1案例实现</h3><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">-define</span><span class="params">(PORT, <span class="number">8888</span>)</span>.  </span><br><span class="line"><span class="keyword">-define</span><span class="params">(PORT2, <span class="number">8889</span>)</span>.  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="title">start_server</span><span class="params">()</span>-&gt;</span>  </span><br><span class="line">    &#123;ok, ListenSocket&#125; = gen_tcp:listen(?PORT, [binary,&#123;active,false&#125;]),  </span><br><span class="line">    &#123;ok, ListenSocket2&#125; = gen_tcp:listen(?PORT2, [binary,&#123;active,false&#125;,&#123;packet,<span class="number">2</span>&#125;]),  </span><br><span class="line">    spawn(<span class="keyword">fun</span>() -&gt; accept(ListenSocket) <span class="keyword">end</span>),  </span><br><span class="line">    spawn(<span class="keyword">fun</span>() -&gt; accept(ListenSocket2) <span class="keyword">end</span>),  </span><br><span class="line">    <span class="keyword">receive</span>  </span><br><span class="line">        _ -&gt; ok  </span><br><span class="line">    <span class="keyword">end</span>.  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="title">accept</span><span class="params">(ListenSocket)</span>-&gt;</span>  </span><br><span class="line">    <span class="keyword">case</span> gen_tcp:accept(ListenSocket) <span class="keyword">of</span>  </span><br><span class="line">        &#123;ok, Socket&#125; -&gt;  </span><br><span class="line">            spawn(<span class="keyword">fun</span>() -&gt; accept(ListenSocket) <span class="keyword">end</span>),  </span><br><span class="line">            loop(Socket);  </span><br><span class="line">        _ -&gt;  </span><br><span class="line">            ok  </span><br><span class="line">    <span class="keyword">end</span>.  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="title">loop</span><span class="params">(Socket)</span>-&gt;</span>  </span><br><span class="line">    <span class="keyword">case</span> gen_tcp:recv(Socket,<span class="number">0</span>) <span class="keyword">of</span>  </span><br><span class="line">        &#123;ok, Data&#125;-&gt;  </span><br><span class="line">            io:format(<span class="string">&quot;received message ~p~n&quot;</span>, [Data]),  </span><br><span class="line">            gen_tcp:send(Socket, <span class="string">&quot;receive successful&quot;</span>),  </span><br><span class="line">            loop(Socket);  </span><br><span class="line">        &#123;error, Reason&#125;-&gt;  </span><br><span class="line">            io:format(<span class="string">&quot;socket error: ~p~n&quot;</span>, [Reason])  </span><br><span class="line">    <span class="keyword">end</span>. </span><br><span class="line"><span class="function"><span class="title">start_client_unpack</span><span class="params">()</span>-&gt;</span>  </span><br><span class="line">    &#123;ok,Socket&#125; = gen_tcp:connect(&#123;<span class="number">127</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>&#125;,?PORT,[binary,&#123;active,false&#125;]),  </span><br><span class="line">    gen_tcp:send(Socket, <span class="string">&quot;1&quot;</span>),  </span><br><span class="line">    gen_tcp:send(Socket, <span class="string">&quot;2&quot;</span>),  </span><br><span class="line">    gen_tcp:send(Socket, <span class="string">&quot;3&quot;</span>),  </span><br><span class="line">    sleep(<span class="number">1000</span>).  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="title">start_client_packed</span><span class="params">()</span>-&gt;</span>  </span><br><span class="line">    &#123;ok,Socket&#125; = gen_tcp:connect(&#123;<span class="number">127</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>&#125;,?PORT2,[binary,&#123;active,false&#125;,&#123;packet,<span class="number">2</span>&#125;]),  </span><br><span class="line">    gen_tcp:send(Socket, <span class="string">&quot;1&quot;</span>),  </span><br><span class="line">    gen_tcp:send(Socket, <span class="string">&quot;2&quot;</span>),  </span><br><span class="line">    gen_tcp:send(Socket, <span class="string">&quot;3&quot;</span>),  </span><br><span class="line">    sleep(<span class="number">1000</span>).  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="title">sleep</span><span class="params">(Count)</span> -&gt;</span>  </span><br><span class="line">    <span class="keyword">receive</span>  </span><br><span class="line">    <span class="keyword">after</span> Count -&gt;  </span><br><span class="line">        ok  </span><br><span class="line">    <span class="keyword">end</span>.  </span><br><span class="line"></span><br><span class="line">结果：</span><br><span class="line"><span class="number">1</span>&gt; tcp_test:start_client_packed().  </span><br><span class="line">received message &lt;&lt;<span class="string">&quot;1&quot;</span>&gt;&gt;  </span><br><span class="line">received message &lt;&lt;<span class="string">&quot;2&quot;</span>&gt;&gt;  </span><br><span class="line">received message &lt;&lt;<span class="string">&quot;3&quot;</span>&gt;&gt;</span><br><span class="line"></span><br><span class="line"><span class="number">2</span>&gt; tcp_test:start_client_unpack().  </span><br><span class="line">received message &lt;&lt;<span class="string">&quot;123&quot;</span>&gt;&gt;</span><br><span class="line"></span><br><span class="line">其实就是  packet:<span class="number">0</span> 一次获取所有数据  所以一起打印出来。 packet|<span class="number">2</span> 每次从虚拟机获取长度<span class="number">2</span>的数据</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="3-各模式粘包问题。"><a href="#3-各模式粘包问题。" class="headerlink" title="3.各模式粘包问题。"></a>3.各模式粘包问题。</h2><p>这边我们不区分主动模式和被动模式， 最终逻辑都是拿到Data数据，如何处理问题。</p>
+<p>packet|2 ：每次获取固定长度数据， 其实不会有粘包问题。</p>
+<p>packet|0:  每次获取所有数据， 如何区分包呢？</p>
+<p>使用 gen_tcp:recv(Socket, Len). 长度我们可以与客户端约定，  但是客户端每次协议数据量大小不一致，怎么解决?  </p>
+<p>可以recv2次， 第一次固定Len，主要获取  数据长度，  第二次只获取Len长度数据。即是一次完整协议。</p>
+<p>要是没收到消息 一直阻塞吗？</p>
+<p>recv可以设置超时时间。</p>
+<h3 id="4-丢包呢？"><a href="#4-丢包呢？" class="headerlink" title="4.丢包呢？"></a>4.丢包呢？</h3><p>tcp传输层有保证数据完整， 具体可以看Tcp实现</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="陈志伟 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="陈志伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>陈志伟
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2026/02/06/inetpacket/" title="inetpacket">http://example.com/2026/02/06/inetpacket/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/03/24/astar/" rel="prev" title="Erlang实现A星寻路">
+      <i class="fa fa-chevron-left"></i> Erlang实现A星寻路
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2026/02/08/behavior-tree/" rel="next" title="行为树介绍">
+      行为树介绍 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-packet%E5%8F%AF%E9%80%89%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.1.</span> <span class="nav-text">1. packet可选模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1%E8%BF%99%E9%87%8C%E6%A0%BC%E5%A4%96%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B-%E4%B8%BB%E5%8A%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E8%A2%AB%E5%8A%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1这里格外介绍一下 主动模式和被动模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E5%90%84%E6%A8%A1%E5%BC%8F%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">2各模式区别？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1%E6%A1%88%E4%BE%8B%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1案例实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%90%84%E6%A8%A1%E5%BC%8F%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98%E3%80%82"><span class="nav-number">1.3.</span> <span class="nav-text">3.各模式粘包问题。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%B8%A2%E5%8C%85%E5%91%A2%EF%BC%9F"><span class="nav-number">1.3.1.</span> <span class="nav-text">4.丢包呢？</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陈志伟</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.suexcxine.win/" title="http:&#x2F;&#x2F;blog.suexcxine.win&#x2F;" rel="noopener" target="_blank">Suex_Cxine</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/zhongwencool/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;zhongwencool&#x2F;" rel="noopener" target="_blank">zhongwen</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈志伟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

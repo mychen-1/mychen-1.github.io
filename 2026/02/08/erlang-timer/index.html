@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述Erlang定时器介绍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="erlang定时器">
+<meta property="og:url" content="http://example.com/2026/02/08/erlang-timer/index.html">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="概述Erlang定时器介绍">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-02-08T03:31:37.000Z">
+<meta property="article:modified_time" content="2026-02-08T03:32:08.206Z">
+<meta property="article:author" content="陈志伟">
+<meta property="article:tag" content="adawdawd">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2026/02/08/erlang-timer/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>erlang定时器 | 陈志伟`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">陈志伟`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">你好啊文斯</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/08/erlang-timer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陈志伟">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="陈志伟`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          erlang定时器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-02-08 11:31:37 / 修改时间：11:32:08" itemprop="dateCreated datePublished" datetime="2026-02-08T11:31:37+08:00">2026-02-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Erlang定时器介绍</p>
+<span id="more"></span>
+
+<h2 id="1-引言"><a href="#1-引言" class="headerlink" title="1.引言"></a>1.引言</h2><p>前几天，在开发群中讨论当cancel_time取消定时器时候， 回调已经到达邮箱问题。</p>
+<p>想法大概分为两种：</p>
+<p>一：既然回调已经到达邮箱，表明此时取消已经晚了，允许回调执行。</p>
+<p>二：面对部分业务，需要保证取消操作一定执行，副作用太大。</p>
+<p>个人觉得  结合业务来看待， 对于需要精确的 充值需要，其他广播需求可不理。</p>
+<h2 id="2-如何实现-消息到达邮箱-取消操作？"><a href="#2-如何实现-消息到达邮箱-取消操作？" class="headerlink" title="2.如何实现 消息到达邮箱 取消操作？"></a>2.如何实现 消息到达邮箱 取消操作？</h2><h3 id="1-介绍erlang-几种定时器"><a href="#1-介绍erlang-几种定时器" class="headerlink" title="1.介绍erlang 几种定时器"></a>1.介绍erlang 几种定时器</h3><ol>
+<li>erlang:start_time(Time, Pid,  Msg): 向Pid进程，Time后发送一个Msg。 回调收到格式 {timeout, Ref, Msg}</li>
+<li>erlang:send_after(Time, Pid, Msg): 和 start_timer一样，只是回调格式不同 只有Msg</li>
+<li>timer模块： 基于gen_server的ETS管理， 底层还是上面2各接口。 （定时器多情况，需要注意性能问题）</li>
+</ol>
+<h3 id="2-解决方案"><a href="#2-解决方案" class="headerlink" title="2. 解决方案"></a>2. 解决方案</h3><p>有一个现成方案， erlang gen_fsm的 cancel_timer</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">cancel_timer</span><span class="params">(Ref)</span> -&gt;</span></span><br><span class="line">    <span class="keyword">case</span> erlang:cancel_timer(Ref)</span><br><span class="line">        <span class="comment">%% todo 回去复制</span></span><br><span class="line">        </span><br><span class="line">        </span><br><span class="line">核心点：  </span><br><span class="line"><span class="number">1</span>.<span class="keyword">receive</span>的时候  会扫描当前邮箱信息。 </span><br><span class="line"><span class="number">2</span>有Ref存在，可以精准匹配到需要取消 Ref</span><br></pre></td></tr></table></figure>
+
+<p>具体博客 ：<a target="_blank" rel="noopener" href="https://blog.csdn.net/kkx12138/article/details/51165619">https://blog.csdn.net/kkx12138/article/details/51165619</a></p>
+<h3 id="3-erlang定时器实现。"><a href="#3-erlang定时器实现。" class="headerlink" title="3.erlang定时器实现。"></a>3.erlang定时器实现。</h3><p>博客：<a target="_blank" rel="noopener" href="https://blog.csdn.net/u012785877/article/details/72805375">https://blog.csdn.net/u012785877/article/details/72805375</a></p>
+<p>该篇博客详细介绍了 c层 time模块如何实现   高效的定时器系统， 支持百万级别定时器。</p>
+<p>我这里对改博客进行一下总结。</p>
+<p><strong>数据结构：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">%% 单个定时器</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">erl_timer</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">erl_timer</span>* <span class="title">next</span>;</span> <span class="comment">/* next entry tiw slot or chain */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">erl_timer</span>* <span class="title">prev</span>;</span> <span class="comment">/* prev entry tiw slot or chain */</span></span><br><span class="line">    <span class="type">void</span> (*timeout)(<span class="type">void</span>*); <span class="comment">/* called when timeout */</span></span><br><span class="line">    <span class="type">void</span>* arg;              <span class="comment">/* argument to timeout/cancel procs */</span></span><br><span class="line">    ErtsMonotonicTime timeout_pos; <span class="comment">/* Timeout in absolute clock ticks */</span>  %% 到期时间</span><br><span class="line">    <span class="type">int</span> slot;  %% 槽位</span><br><span class="line">&#125; ErtsTWheelTimer;</span><br><span class="line">%% 可以看出定时器的连接使用链表格式连接。</span><br><span class="line"></span><br><span class="line">%% 总定时器</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ErtsTimerWheel_</span> &#123;</span></span><br><span class="line">    ErtsTWheelTimer *slots[<span class="number">1</span>+ERT_TW_SOON_WHEEL_SIZE+ERTS_TW_LATER_WHTTL_SIZE];</span><br><span class="line">    ErtsMonotonicTime pos;</span><br><span class="line">    Uint nto;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    	Uint nto;</span><br><span class="line">    &#125; at_once;  %% 立即轮</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">     	ErtsMonotonicTime  min_tpos:</span><br><span class="line">      	Uint nto;</span><br><span class="line">    &#125; soon;  %% 近槽轮</span><br><span class="line">     <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">         ErtsMonotonicTime  min_tpos:</span><br><span class="line">         <span class="type">int</span> min_tpos_slot;</span><br><span class="line">         ErtsMonotonicTime pos;</span><br><span class="line">    	 Uint nto;</span><br><span class="line">    &#125; later; %% 远槽轮</span><br><span class="line">    <span class="type">int</span> yield_slot; %% 当前槽位</span><br><span class="line">    <span class="type">int</span> yield_slots_left; %% 一轮执行槽位范围 </span><br><span class="line">    ErtsTWheelTimer sentinel;  %% 槽位 链表起点</span><br><span class="line">    <span class="type">int</span> true_next_timeout_time; %% boolean  是否找到真实的超时时间</span><br><span class="line">    ErtsMonotonicTime next_timeout_time; %% 下一个定时器 触发时间</span><br><span class="line">    ErtsMonotonicTime next_timeout_pos; %% 下一个定时器触发时间轮位置</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>通过数据结构，大概介绍一下设计理念。</p>
+<p>%% todo 图片</p>
+<p>由图结合ErtsTWheelTimer *slots[1+ERT_TW_SOON_WHEEL_SIZE+ERTS_TW_LATER_WHTTL_SIZE]三个参数可知， 三个轮槽对应大小。  erl_timer中 slot即是  </p>
+<p>ErtsTimerWheel_ -&gt; slots下标。 </p>
+<p>那对于 不同的定时器，计算出来的slot可能一样， 即slot冲突的时候是怎么解决的？</p>
+<p>可以看erl_timer 结构，有next prev 可以推断他们之间使用链表相连。  大致为如图所示。</p>
+<p>%% todo 博客图片</p>
+<p><strong>time 接口：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1.</span>创建时间轮 erts_create_timer_wheel</span><br><span class="line">    ErtsTimerWheel *</span><br><span class="line">基本的分配内存，初始化</span><br><span class="line">erts_create_timer_wheel(ErtsSchedulerData *esdp)</span><br><span class="line">&#123;</span><br><span class="line">    ErtsMonotonicTime mtime;</span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line">    ErtsTimerWheel *tiw;</span><br><span class="line">    tiw = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_TIMER_WHEEL,</span><br><span class="line">                         <span class="keyword">sizeof</span>(ErtsTimerWheel));</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; ERTS_TIW_SIZE; i++)</span><br><span class="line">    tiw-&gt;w[i] = <span class="literal">NULL</span>;</span><br><span class="line">    mtime = erts_get_monotonic_time(esdp);</span><br><span class="line">    tiw-&gt;pos = ERTS_MONOTONIC_TO_CLKTCKS(mtime);</span><br><span class="line">    ..</span><br><span class="line">    <span class="keyword">return</span> tiw;</span><br><span class="line">&#125;</span><br><span class="line"><span class="number">2.</span>插入定时器 insert_timer_into_slot</span><br><span class="line">    <span class="type">static</span> ERTS_INLINE <span class="type">void</span></span><br><span class="line">当slot冲突时， 使用链表相连</span><br><span class="line">insert_timer_into_slot(ErtsTimerWheel *tiw, <span class="type">int</span> slot, ErtsTWheelTimer *p)</span><br><span class="line">&#123;</span><br><span class="line">    ERTS_TW_ASSERT(slot &gt;= <span class="number">0</span>);</span><br><span class="line">    ERTS_TW_ASSERT(slot &lt; ERTS_TIW_SIZE);</span><br><span class="line">    p-&gt;slot = slot;</span><br><span class="line">    <span class="keyword">if</span> (!tiw-&gt;w[slot]) &#123;</span><br><span class="line">    tiw-&gt;w[slot] = p;</span><br><span class="line">    p-&gt;next = p;</span><br><span class="line">    p-&gt;prev = p;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">    ErtsTWheelTimer *next, *prev;</span><br><span class="line">    next = tiw-&gt;w[slot];</span><br><span class="line">    prev = next-&gt;prev;</span><br><span class="line">    p-&gt;next = next;</span><br><span class="line">    p-&gt;prev = prev;</span><br><span class="line">    prev-&gt;next = p;</span><br><span class="line">    next-&gt;prev = p;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span>去除定时器 remove_timer</span><br><span class="line">    <span class="type">static</span> ERTS_INLINE <span class="type">void</span></span><br><span class="line">计算slot  该从哪个槽池子移出</span><br><span class="line">remove_timer(ErtsTimerWheel *tiw, ErtsTWheelTimer *p)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> slot = p-&gt;slot;</span><br><span class="line">    ERTS_TW_ASSERT(slot != ERTS_TWHEEL_SLOT_INACTIVE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (slot &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        ERTS_TW_ASSERT(slot &lt; ERTS_TIW_SIZE);</span><br><span class="line">        <span class="keyword">if</span> (p-&gt;next == p) &#123;</span><br><span class="line">            ERTS_TW_ASSERT(tiw-&gt;w[slot] == p);</span><br><span class="line">            tiw-&gt;w[slot] = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (tiw-&gt;w[slot] == p)</span><br><span class="line">            tiw-&gt;w[slot] = p-&gt;next;</span><br><span class="line">            p-&gt;prev-&gt;next = p-&gt;next;</span><br><span class="line">            p-&gt;next-&gt;prev = p-&gt;prev;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* Timer in &quot;at once&quot; queue... */</span></span><br><span class="line">        ERTS_TW_ASSERT(slot == ERTS_TWHEEL_SLOT_AT_ONCE);</span><br><span class="line">        <span class="keyword">if</span> (p-&gt;prev)</span><br><span class="line">            p-&gt;prev-&gt;next = p-&gt;next;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            ERTS_TW_ASSERT(tiw-&gt;at_once.head == p);</span><br><span class="line">            tiw-&gt;at_once.head = p-&gt;next;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (p-&gt;next)</span><br><span class="line">            p-&gt;next-&gt;prev = p-&gt;prev;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            ERTS_TW_ASSERT(tiw-&gt;at_once.tail == p);</span><br><span class="line">            tiw-&gt;at_once.tail = p-&gt;prev;</span><br><span class="line">        &#125;</span><br><span class="line">        ERTS_TW_ASSERT(tiw-&gt;at_once.nto &gt; <span class="number">0</span>);</span><br><span class="line">        tiw-&gt;at_once.nto--;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    p-&gt;slot = ERTS_TWHEEL_SLOT_INACTIVE;</span><br><span class="line">    tiw-&gt;nto--;</span><br><span class="line">&#125;   </span><br><span class="line"></span><br><span class="line"><span class="number">6</span>创建定时器 erts_twheel_set_timer</span><br><span class="line">    <span class="type">void</span></span><br><span class="line"><span class="title function_">erts_twheel_set_timer</span><span class="params">(ErtsTimerWheel *tiw,</span></span><br><span class="line"><span class="params">              ErtsTWheelTimer *p, ErlTimeoutProc timeout,</span></span><br><span class="line"><span class="params">              ErlCancelProc cancel, <span class="type">void</span> *arg,</span></span><br><span class="line"><span class="params">              ErtsMonotonicTime timeout_pos)</span></span><br><span class="line">&#123;</span><br><span class="line">    ErtsMonotonicTime timeout_time;</span><br><span class="line">    ERTS_MSACC_PUSH_AND_SET_STATE_M_X(ERTS_MSACC_STATE_TIMERS);</span><br><span class="line"></span><br><span class="line">    p-&gt;u.func.timeout = timeout;</span><br><span class="line">    p-&gt;u.func.cancel = cancel;</span><br><span class="line">    p-&gt;u.func.arg = arg;</span><br><span class="line"></span><br><span class="line">    ERTS_TW_ASSERT(p-&gt;slot == ERTS_TWHEEL_SLOT_INACTIVE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timeout_pos &lt;= tiw-&gt;pos) &#123;</span><br><span class="line">    tiw-&gt;nto++;</span><br><span class="line">    tiw-&gt;at_once.nto++;</span><br><span class="line">    p-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">    p-&gt;prev = tiw-&gt;at_once.tail;</span><br><span class="line">    <span class="keyword">if</span> (tiw-&gt;at_once.tail) &#123;</span><br><span class="line">        ERTS_TW_ASSERT(tiw-&gt;at_once.head);</span><br><span class="line">        tiw-&gt;at_once.tail-&gt;next = p;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        ERTS_TW_ASSERT(!tiw-&gt;at_once.head);</span><br><span class="line">        tiw-&gt;at_once.head = p;</span><br><span class="line">    &#125;</span><br><span class="line">    tiw-&gt;at_once.tail = p;</span><br><span class="line">    p-&gt;timeout_pos = tiw-&gt;pos;</span><br><span class="line">    p-&gt;slot = ERTS_TWHEEL_SLOT_AT_ONCE;</span><br><span class="line">    timeout_time = ERTS_CLKTCKS_TO_MONOTONIC(tiw-&gt;pos);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="type">int</span> slot;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* calculate slot */</span></span><br><span class="line">    slot = (<span class="type">int</span>) (timeout_pos &amp; (ERTS_TIW_SIZE<span class="number">-1</span>));</span><br><span class="line"></span><br><span class="line">    insert_timer_into_slot(tiw, slot, p);</span><br><span class="line"></span><br><span class="line">    tiw-&gt;nto++;</span><br><span class="line">    %% 上面都是判断 slot 放入哪个槽池子</span><br><span class="line"></span><br><span class="line">    timeout_time = ERTS_CLKTCKS_TO_MONOTONIC(timeout_pos);</span><br><span class="line">    p-&gt;timeout_pos = timeout_pos;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (timeout_time &lt; tiw-&gt;next_timeout_time) &#123;</span><br><span class="line">    tiw-&gt;true_next_timeout_time = <span class="number">1</span>;</span><br><span class="line">    tiw-&gt;next_timeout_time = timeout_time;</span><br><span class="line">    &#125;</span><br><span class="line">    %% 这里就维护 next_timeout_time 下一个最近的时间， 这个字段在 erl_time_sup tick同步的时候用到， </span><br><span class="line">    ERTS_MSACC_POP_STATE_M_X();</span><br><span class="line">&#125;</span><br><span class="line"><span class="number">7</span>寻找下一个最近到时时间 find_next_timeout</span><br><span class="line">    <span class="type">static</span> ERTS_INLINE ErtsMonotonicTime</span><br><span class="line"><span class="title function_">find_next_timeout</span><span class="params">(ErtsSchedulerData *esdp,</span></span><br><span class="line"><span class="params">          ErtsTimerWheel *tiw,</span></span><br><span class="line"><span class="params">          <span class="type">int</span> search_all,</span></span><br><span class="line"><span class="params">          ErtsMonotonicTime curr_time,       <span class="comment">/* When !search_all */</span></span></span><br><span class="line"><span class="params">          ErtsMonotonicTime max_search_time)</span> <span class="comment">/* When !search_all */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> start_ix, tiw_pos_ix;</span><br><span class="line">    ErtsTWheelTimer *p;</span><br><span class="line">    <span class="type">int</span> true_min_timeout = <span class="number">0</span>;</span><br><span class="line">    ErtsMonotonicTime min_timeout, min_timeout_pos, slot_timeout_pos;</span><br><span class="line"></span><br><span class="line">    %% 判断总定时器   <span class="number">0</span>个代表为空</span><br><span class="line">    <span class="keyword">if</span> (tiw-&gt;nto == <span class="number">0</span>) &#123; <span class="comment">/* no timeouts in wheel */</span></span><br><span class="line">        <span class="keyword">if</span> (!search_all)</span><br><span class="line">            min_timeout_pos = tiw-&gt;pos;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            curr_time = erts_get_monotonic_time(esdp);</span><br><span class="line">            tiw-&gt;pos = min_timeout_pos = ERTS_MONOTONIC_TO_CLKTCKS(curr_time);</span><br><span class="line">        &#125;</span><br><span class="line">        min_timeout_pos += ERTS_MONOTONIC_TO_CLKTCKS(ERTS_MONOTONIC_DAY);</span><br><span class="line">        <span class="keyword">goto</span> found_next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    slot_timeout_pos = min_timeout_pos = tiw-&gt;pos;</span><br><span class="line">    <span class="keyword">if</span> (search_all)</span><br><span class="line">       min_timeout_pos += ERTS_MONOTONIC_TO_CLKTCKS(ERTS_MONOTONIC_DAY);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">       min_timeout_pos = ERTS_MONOTONIC_TO_CLKTCKS(curr_time + max_search_time);</span><br><span class="line"></span><br><span class="line">    start_ix = tiw_pos_ix = (<span class="type">int</span>) (tiw-&gt;pos &amp; (ERTS_TIW_SIZE<span class="number">-1</span>));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (++slot_timeout_pos &gt;= min_timeout_pos)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">        p = tiw-&gt;w[tiw_pos_ix];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (p) &#123;</span><br><span class="line">            ErtsTWheelTimer *end = p;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">do</span>  &#123;</span><br><span class="line">            ErtsMonotonicTime timeout_pos;</span><br><span class="line">            timeout_pos = p-&gt;timeout_pos;</span><br><span class="line">            <span class="keyword">if</span> (min_timeout_pos &gt; timeout_pos) &#123;</span><br><span class="line">                true_min_timeout = <span class="number">1</span>;</span><br><span class="line">                min_timeout_pos = timeout_pos;</span><br><span class="line">                <span class="keyword">if</span> (min_timeout_pos &lt;= slot_timeout_pos)</span><br><span class="line">                <span class="keyword">goto</span> found_next;</span><br><span class="line">            &#125;</span><br><span class="line">            p = p-&gt;next;</span><br><span class="line">            &#125; <span class="keyword">while</span> (p != end);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        tiw_pos_ix++;</span><br><span class="line">        <span class="keyword">if</span> (tiw_pos_ix == ERTS_TIW_SIZE)</span><br><span class="line">            tiw_pos_ix = <span class="number">0</span>;</span><br><span class="line">    &#125; <span class="keyword">while</span> (start_ix != tiw_pos_ix);</span><br><span class="line"></span><br><span class="line">found_next:</span><br><span class="line"></span><br><span class="line">    min_timeout = ERTS_CLKTCKS_TO_MONOTONIC(min_timeout_pos);</span><br><span class="line">    tiw-&gt;next_timeout_time = min_timeout;</span><br><span class="line">    tiw-&gt;true_next_timeout_time = true_min_timeout;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> min_timeout;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">8.</span>时间轮嘀嗒 erts_bump_timers</span><br><span class="line">    <span class="type">void</span></span><br><span class="line"><span class="title function_">erts_bump_timers</span><span class="params">(ErtsTimerWheel *tiw, ErtsMonotonicTime curr_time)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> tiw_pos_ix, slots, yielded_slot_restarted, yield_count;</span><br><span class="line">    ErtsMonotonicTime bump_to, tmp_slots, old_pos;</span><br><span class="line">    ERTS_MSACC_PUSH_AND_SET_STATE_M_X(ERTS_MSACC_STATE_TIMERS);</span><br><span class="line"></span><br><span class="line">    yield_count = ERTS_TWHEEL_BUMP_YIELD_LIMIT;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * In order to be fair we always continue with work</span></span><br><span class="line"><span class="comment">     * where we left off when restarting after a yield.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tiw-&gt;yield_slot &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        yielded_slot_restarted = <span class="number">1</span>;</span><br><span class="line">        tiw_pos_ix = tiw-&gt;yield_slot;</span><br><span class="line">        slots = tiw-&gt;yield_slots_left;</span><br><span class="line">        bump_to = tiw-&gt;pos;</span><br><span class="line">        old_pos = tiw-&gt;yield_start_pos;</span><br><span class="line">        <span class="keyword">goto</span> restart_yielded_slot;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line"></span><br><span class="line">        yielded_slot_restarted = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        bump_to = ERTS_MONOTONIC_TO_CLKTCKS(curr_time);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            ErtsTWheelTimer *p;</span><br><span class="line"></span><br><span class="line">            old_pos = tiw-&gt;pos;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (tiw-&gt;nto == <span class="number">0</span>) &#123;</span><br><span class="line">                empty_wheel:</span><br><span class="line">                ERTS_DBG_CHK_SAFE_TO_SKIP_TO(tiw, bump_to);</span><br><span class="line">                tiw-&gt;true_next_timeout_time = <span class="number">0</span>;</span><br><span class="line">                tiw-&gt;next_timeout_time = curr_time + ERTS_MONOTONIC_DAY;</span><br><span class="line">                tiw-&gt;pos = bump_to;</span><br><span class="line">                tiw-&gt;yield_slot = ERTS_TWHEEL_SLOT_INACTIVE;</span><br><span class="line">                        ERTS_MSACC_POP_STATE_M_X();</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            p = tiw-&gt;at_once.head;</span><br><span class="line">            <span class="keyword">while</span> (p) &#123;</span><br><span class="line">                <span class="keyword">if</span> (--yield_count &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">                    ERTS_TW_ASSERT(tiw-&gt;nto &gt; <span class="number">0</span>);</span><br><span class="line">                    ERTS_TW_ASSERT(tiw-&gt;at_once.nto &gt; <span class="number">0</span>);</span><br><span class="line">                    tiw-&gt;yield_slot = ERTS_TWHEEL_SLOT_AT_ONCE;</span><br><span class="line">                    tiw-&gt;true_next_timeout_time = <span class="number">1</span>;</span><br><span class="line">                    tiw-&gt;next_timeout_time = ERTS_CLKTCKS_TO_MONOTONIC(old_pos);</span><br><span class="line">                            ERTS_MSACC_POP_STATE_M_X();</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                ERTS_TW_ASSERT(tiw-&gt;nto &gt; <span class="number">0</span>);</span><br><span class="line">                ERTS_TW_ASSERT(tiw-&gt;at_once.nto &gt; <span class="number">0</span>);</span><br><span class="line">                tiw-&gt;nto--;</span><br><span class="line">                tiw-&gt;at_once.nto--;</span><br><span class="line">                tiw-&gt;at_once.head = p-&gt;next;</span><br><span class="line">                <span class="keyword">if</span> (p-&gt;next)</span><br><span class="line">                    p-&gt;next-&gt;prev = <span class="literal">NULL</span>;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                    tiw-&gt;at_once.tail = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">                timeout_timer(p);</span><br><span class="line"></span><br><span class="line">                p = tiw-&gt;at_once.head;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (tiw-&gt;pos &gt;= bump_to) &#123;</span><br><span class="line">                ERTS_MSACC_POP_STATE_M_X();</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (tiw-&gt;nto == <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">goto</span> empty_wheel;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (tiw-&gt;true_next_timeout_time) &#123;</span><br><span class="line">                ErtsMonotonicTime skip_until_pos;</span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * No need inspecting slots where we know no timeouts</span></span><br><span class="line"><span class="comment">                 * to trigger should reside.</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line"></span><br><span class="line">                skip_until_pos = ERTS_MONOTONIC_TO_CLKTCKS(tiw-&gt;next_timeout_time);</span><br><span class="line">                <span class="keyword">if</span> (skip_until_pos &gt; bump_to)</span><br><span class="line">                    skip_until_pos = bump_to;</span><br><span class="line"></span><br><span class="line">                skip_until_pos--;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (skip_until_pos &gt; tiw-&gt;pos) &#123;</span><br><span class="line">                    ERTS_DBG_CHK_SAFE_TO_SKIP_TO(tiw, skip_until_pos);</span><br><span class="line"></span><br><span class="line">                    tiw-&gt;pos = skip_until_pos;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            tiw_pos_ix = (<span class="type">int</span>) ((tiw-&gt;pos+<span class="number">1</span>) &amp; (ERTS_TIW_SIZE<span class="number">-1</span>));</span><br><span class="line">            tmp_slots = (bump_to - tiw-&gt;pos);</span><br><span class="line">            <span class="keyword">if</span> (tmp_slots &lt; (ErtsMonotonicTime) ERTS_TIW_SIZE)</span><br><span class="line">              slots = (<span class="type">int</span>) tmp_slots;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">              slots = ERTS_TIW_SIZE;</span><br><span class="line"></span><br><span class="line">            tiw-&gt;pos = bump_to;</span><br><span class="line"></span><br><span class="line">            %% 是否还有 定时器</span><br><span class="line">            <span class="keyword">while</span> (slots &gt; <span class="number">0</span>) &#123;</span><br><span class="line"></span><br><span class="line">                p = tiw-&gt;w[tiw_pos_ix];</span><br><span class="line">                <span class="keyword">if</span> (p) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (p-&gt;next == p) &#123;</span><br><span class="line">                        ERTS_TW_ASSERT(tiw-&gt;sentinel.next == &amp;tiw-&gt;sentinel);</span><br><span class="line">                        ERTS_TW_ASSERT(tiw-&gt;sentinel.prev == &amp;tiw-&gt;sentinel);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        tiw-&gt;sentinel.next = p-&gt;next;</span><br><span class="line">                        tiw-&gt;sentinel.prev = p-&gt;prev;</span><br><span class="line">                        tiw-&gt;sentinel.next-&gt;prev = &amp;tiw-&gt;sentinel;</span><br><span class="line">                        tiw-&gt;sentinel.prev-&gt;next = &amp;tiw-&gt;sentinel;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    tiw-&gt;w[tiw_pos_ix] = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (p-&gt;timeout_pos &gt; bump_to) &#123;</span><br><span class="line">                            <span class="comment">/* Very unusual case... */</span></span><br><span class="line">                            ++yield_count;</span><br><span class="line">                            insert_timer_into_slot(tiw, tiw_pos_ix, p);</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            <span class="comment">/* Normal case... */</span></span><br><span class="line">                            timeout_timer(p);</span><br><span class="line">                            tiw-&gt;nto--;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        restart_yielded_slot:</span><br><span class="line"></span><br><span class="line">                        p = tiw-&gt;sentinel.next;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (p == &amp;tiw-&gt;sentinel) &#123;</span><br><span class="line">                            ERTS_TW_ASSERT(tiw-&gt;sentinel.prev == &amp;tiw-&gt;sentinel);</span><br><span class="line">                            <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">						%% 判断当次消耗定时器总数， 不能占用太久， 防止其他系统饿死</span><br><span class="line">                        <span class="keyword">if</span> (--yield_count &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">                            tiw-&gt;true_next_timeout_time = <span class="number">1</span>;</span><br><span class="line">                            tiw-&gt;next_timeout_time = ERTS_CLKTCKS_TO_MONOTONIC(old_pos);</span><br><span class="line">                            tiw-&gt;yield_slot = tiw_pos_ix;</span><br><span class="line">                            tiw-&gt;yield_slots_left = slots;</span><br><span class="line">                            tiw-&gt;yield_start_pos = old_pos;</span><br><span class="line">                            ERTS_MSACC_POP_STATE_M_X();</span><br><span class="line">                            <span class="keyword">return</span>; <span class="comment">/* Yield! */</span></span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        tiw-&gt;sentinel.next = p-&gt;next;</span><br><span class="line">                        p-&gt;next-&gt;prev = &amp;tiw-&gt;sentinel;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                tiw_pos_ix++;</span><br><span class="line">                <span class="keyword">if</span> (tiw_pos_ix == ERTS_TIW_SIZE)</span><br><span class="line">                    tiw_pos_ix = <span class="number">0</span>;</span><br><span class="line">                slots--;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">while</span> (yielded_slot_restarted);</span><br><span class="line"></span><br><span class="line">    tiw-&gt;yield_slot = ERTS_TWHEEL_SLOT_INACTIVE;</span><br><span class="line">    tiw-&gt;true_next_timeout_time = <span class="number">0</span>;</span><br><span class="line">    tiw-&gt;next_timeout_time = curr_time + ERTS_MONOTONIC_DAY;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Search at most two seconds ahead... */</span></span><br><span class="line">    (<span class="type">void</span>) find_next_timeout(<span class="literal">NULL</span>, tiw, <span class="number">0</span>, curr_time, ERTS_SEC_TO_MONOTONIC(<span class="number">2</span>));</span><br><span class="line">    ERTS_MSACC_POP_STATE_M_X();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>接口详细介绍可以看博客， 我大概总结几点：</p>
+<ol>
+<li><p>erl_timer 的增删查。</p>
+<ol>
+<li>增：使用erts_create_timer_wheel 初始化，erts_twheel_set_timer放入ErtsTimerWheel 中，这步操作， 会计算slot，判断放入哪一个槽中， 到槽中有slot冲突时候， insert_timer_into_slot。</li>
+<li>删：remove_timer</li>
+</ol>
+<p>3.查：find_next_timeout：这个查有点特殊， 是寻找下一个定时器触发时间， 这个接口作用，主要搭配  ErtsTimerWheel_  中next_timeout_time、next_timeout_pos字段 和 轮询配合。下面详细介绍</p>
+</li>
+<li><p>轮询嘀嗒： erts_bump_timers。 如图所示：</p>
+<p>%% todo</p>
+</li>
+</ol>
+<h4 id="总结流程"><a href="#总结流程" class="headerlink" title="总结流程"></a>总结流程</h4><ol>
+<li>erl_timer_sup:管理进程。 erts_init_time_sup 进行初始化。</li>
+<li>tick轮询时候，检测current_time 与  next_timeout_time,  大于才会进入轮询。</li>
+<li>time层面， 进入erts_bump_timers 轮询嘀嗒。</li>
+<li>等待下次 tick轮询。</li>
+</ol>
+<p><strong>设计方案：</strong></p>
+<p>1.数据结构采用轮槽+链表实现， 轮槽又分为 立即轮 + 近槽轮+远槽轮。 轮槽大小  远槽轮 &gt; 近槽轮 &gt; 立即轮。 对于查询操作 查找轮槽slot 为 O(1), 然后退化为链表O（n）。 对于高频时间点，可能查询可能慢一点，例如0点，但是也是常量级。</p>
+<p>2.每次 bump_timer    只执行ERTS_TWHEEL_BUMP_YIELD_LIMIT， 防止定时器轮询一直占用，其他功能饿死。</p>
+<p>3.维护    next_timeout_time 和 next_timeout_pos，  sup模块 tick的时候，可以优先判断当前时间与定时器池子 next_timeout_time ， 减少不必要轮询。</p>
+<p>4.对于超长定时器， 保持在同一槽位， 减少slot的占用。 使用树结构。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="陈志伟 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="陈志伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>陈志伟
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2026/02/08/erlang-timer/" title="erlang定时器">http://example.com/2026/02/08/erlang-timer/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/02/08/behavior-tree/" rel="prev" title="行为树介绍">
+      <i class="fa fa-chevron-left"></i> 行为树介绍
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2026/02/08/erlang-node/" rel="next" title="erlang节点-分布式">
+      erlang节点-分布式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%BC%95%E8%A8%80"><span class="nav-number">1.1.</span> <span class="nav-text">1.引言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0-%E6%B6%88%E6%81%AF%E5%88%B0%E8%BE%BE%E9%82%AE%E7%AE%B1-%E5%8F%96%E6%B6%88%E6%93%8D%E4%BD%9C%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">2.如何实现 消息到达邮箱 取消操作？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%BB%8B%E7%BB%8Derlang-%E5%87%A0%E7%A7%8D%E5%AE%9A%E6%97%B6%E5%99%A8"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.介绍erlang 几种定时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">1.2.2.</span> <span class="nav-text">2. 解决方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-erlang%E5%AE%9A%E6%97%B6%E5%99%A8%E5%AE%9E%E7%8E%B0%E3%80%82"><span class="nav-number">1.2.3.</span> <span class="nav-text">3.erlang定时器实现。</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">总结流程</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陈志伟</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.suexcxine.win/" title="http:&#x2F;&#x2F;blog.suexcxine.win&#x2F;" rel="noopener" target="_blank">Suex_Cxine</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/zhongwencool/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;zhongwencool&#x2F;" rel="noopener" target="_blank">zhongwen</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈志伟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
