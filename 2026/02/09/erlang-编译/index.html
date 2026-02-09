@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述Erlang 编译流程深度解析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="erlang 编译">
+<meta property="og:url" content="http://example.com/2026/02/09/erlang-%E7%BC%96%E8%AF%91/index.html">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="概述Erlang 编译流程深度解析">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/%5Cpic%5Call%5C%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20260209113501_16_79.jpg">
+<meta property="article:published_time" content="2026-02-09T01:44:39.000Z">
+<meta property="article:modified_time" content="2026-02-09T03:39:24.867Z">
+<meta property="article:author" content="陈志伟">
+<meta property="article:tag" content="adawdawd">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/%5Cpic%5Call%5C%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20260209113501_16_79.jpg">
+
+<link rel="canonical" href="http://example.com/2026/02/09/erlang-%E7%BC%96%E8%AF%91/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>erlang 编译 | 陈志伟`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">陈志伟`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">你好啊文斯</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/09/erlang-%E7%BC%96%E8%AF%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陈志伟">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="陈志伟`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          erlang 编译
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-02-09 09:44:39 / 修改时间：11:39:24" itemprop="dateCreated datePublished" datetime="2026-02-09T09:44:39+08:00">2026-02-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Erlang 编译流程深度解析</p>
+<span id="more"></span>
+
+<h1 id="Erlang-编译流程深度解析"><a href="#Erlang-编译流程深度解析" class="headerlink" title="Erlang 编译流程深度解析"></a>Erlang 编译流程深度解析</h1><p>从源代码到 BEAM 字节码的完整编译链路，涵盖词法分析、语法转换、中间语言优化等核心阶段。</p>
+<h2 id="1-Scanner（扫描器）"><a href="#1-Scanner（扫描器）" class="headerlink" title="1.Scanner（扫描器）"></a>1.Scanner（扫描器）</h2><p>职责：将源代码字符流转换为 Token 流</p>
+<h3 id="识别元素类型"><a href="#识别元素类型" class="headerlink" title="识别元素类型"></a>识别元素类型</h3><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">关键字：module,export, fun, case, if, receive, after, when 等</span><br><span class="line">标识符：变量名、函数名、模块名（如 my_module, handle_cal1)</span><br><span class="line">字面量：整数、浮点数、字符串、原子（如 42, 3.14,“he11o&quot;&#x27;, ok)</span><br><span class="line">操作符：+，一，++，=:=，=/=， andalso, orelse 等</span><br><span class="line">分隔符：(，)，[•,]，&#123;，&#125;等</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-Preprocessor-（预处理器）"><a href="#2-Preprocessor-（预处理器）" class="headerlink" title="2.Preprocessor （预处理器）"></a>2.Preprocessor （预处理器）</h2><p>职责：驱动扫描器，执行宏展开和文件包含</p>
+<h3 id="核心功能"><a href="#核心功能" class="headerlink" title="核心功能"></a>核心功能</h3><p>1.词法分析：将源代码(字符流）转换为 Token 流，过滤注释<br>2.宏展开：处理-define( 定义的宏<br>3.文件包含：处理-incTudeO 和-include_ 1ibo 指令</p>
+<h3 id="关键技术点"><a href="#关键技术点" class="headerlink" title="关键技术点"></a>关键技术点</h3><p><strong>宏展开机制</strong>：宏展开以符号形式进行，不是纯粹的字符串替换<br>这意味着宏展开后的代码会经过语法检查，确保生成的代码符合 Erlang 语法规范。</p>
+<h3 id="实际应用"><a href="#实际应用" class="headerlink" title="实际应用"></a>实际应用</h3><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-define (ADD, +).</span><br><span class="line">-define (ADD1, +).</span><br><span class="line">test () -&gt;</span><br><span class="line">A = 1 +?ADD 1,</span><br><span class="line">A1 = 1 ?ADD 1.</span><br><span class="line">%% 展开后</span><br><span class="line">test() -&gt;</span><br><span class="line">A = 1 + +1,</span><br><span class="line">A1 = 1 ++ 1.</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-Parse-Transform-语法分析与转换"><a href="#3-Parse-Transform-语法分析与转换" class="headerlink" title="3.Parse Transform(语法分析与转换)"></a>3.Parse Transform(语法分析与转换)</h3><h3 id="3-1-Parse（语法分析）"><a href="#3-1-Parse（语法分析）" class="headerlink" title="3.1 Parse（语法分析）"></a>3.1 Parse（语法分析）</h3><p>职责：根据处理好的 Token 生成 AST (Abstract Syntax Tree， 抽象语法树）</p>
+<h4 id="AST-结构："><a href="#AST-结构：" class="headerlink" title="AST 结构："></a>AST 结构：</h4><p>1.每个语法结构对应一个元组<br>2.包含位置信息（行号、列号）<br>3.保留完整的语法层次结构</p>
+<h3 id="3-2-Transform-AST-转换）"><a href="#3-2-Transform-AST-转换）" class="headerlink" title="3.2 Transform (AST 转换）"></a>3.2 Transform (AST 转换）</h3><p>职责：对生成的 AST 进行二次转换，实现代码生成和优化</p>
+<h4 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h4><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">%% 在需要转换的模块中添加编译选项</span><br><span class="line">-compile (tparse_trans form, my _1og_trans form&#125;).</span><br></pre></td></tr></table></figure>
+
+<h4 id="转换模块实现"><a href="#转换模块实现" class="headerlink" title="转换模块实现"></a>转换模块实现</h4><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">-module</span> <span class="params">(my_log_transform)</span>.</span><br><span class="line"><span class="keyword">-export</span> <span class="params">([parse_transform/<span class="number">2</span>])</span>.</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">parse_transform</span><span class="params">(Forms, _Options)</span> -&gt;</span></span><br><span class="line">	<span class="comment">%%Forms是AST 列表</span></span><br><span class="line">	<span class="comment">%% 遍历并转换 AST 节点</span></span><br><span class="line">	transform_forms (Forms, [<span class="number">1</span>).</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">transform_form</span><span class="params">(&#123;call, Line, &#123;remote, _, &#123;atom, -, my_log&#125;, &#123;atom, -, Level&#125;&#125;, _Args&#125; =</span></span></span><br><span class="line"><span class="params"><span class="function">Form, LogLevel)</span> -&gt;</span></span><br><span class="line">	<span class="comment">%% 检查日志调用</span></span><br><span class="line">	<span class="keyword">case</span> should_log (Level, LogLevel) <span class="keyword">of</span></span><br><span class="line">		<span class="literal">true</span> -&gt;</span><br><span class="line">			io: format (<span class="string">&quot;保留日志：~p~n&quot;</span>, [Level]),</span><br><span class="line">			From.</span><br><span class="line">			<span class="comment">% 保留日志凋用</span></span><br><span class="line">		<span class="literal">false</span> -&gt;	</span><br><span class="line">			io: format (<span class="string">&quot;移除日志：~p（当前级别：~p)~n&quot;</span>， [Level, LogLeve1])，</span><br><span class="line">			&#123;atom, Line, ok&#125; <span class="comment">% 移除，更换为 ok</span></span><br><span class="line">	<span class="keyword">end</span>;</span><br><span class="line"><span class="function"><span class="title">transform_forms</span> <span class="params">(Form, Acc)</span>-&gt;</span></span><br><span class="line">	Form.</span><br></pre></td></tr></table></figure>
+
+<h4 id="转换示例"><a href="#转换示例" class="headerlink" title="转换示例"></a>转换示例</h4><p>转换前：</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">-module</span> <span class="params">(test)</span>.</span><br><span class="line"><span class="keyword">-export</span> <span class="params">([debug/<span class="number">1</span>])</span>.</span><br><span class="line"><span class="keyword">-compile</span> <span class="params">(&#123;parse_transform, my_log_transform&#125;)</span>.</span><br><span class="line"><span class="function"><span class="title">debug</span> <span class="params">(Msq)</span> -&gt;</span></span><br><span class="line">io: format (<span class="string">&quot;Debug: ~p~n&quot;</span>, [Msg]).</span><br></pre></td></tr></table></figure>
+
+<p>转换后（第8行debug 被转换为 ok）：</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">-module</span> <span class="params">(test)</span>,</span><br><span class="line"><span class="keyword">-export</span> <span class="params">([debug/<span class="number">1</span>])</span>.</span><br><span class="line"><span class="function"><span class="title">debug</span> <span class="params">(Msa)</span> -&gt;</span> ok.</span><br><span class="line"><span class="comment">%% 原 io:format 调用被移除</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="项目实践"><a href="#项目实践" class="headerlink" title="项目实践"></a>项目实践</h3><p>SLG 项目中的实际应用：</p>
+<p>1.data.erl模块：使用 data_parse_trans 进行配置表代码生成<br>2.data parse trans.erl：自动生成配置表的 config&#x2F;1 和 config&#x2F;2 函数</p>
+<p>3.优势：减少重复代码，统一配置访问接口</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">%% data.er1 中使用</span></span><br><span class="line"><span class="keyword">-compile</span><span class="params">(ipar se_transform, dataparse_trans&#125;)</span> .</span><br><span class="line"><span class="comment">%% 自动生成以下函数：</span></span><br><span class="line"><span class="comment">%% role_config/1, role_config/2</span></span><br><span class="line"><span class="comment">%% task_config/ 1, task_config/2</span></span><br><span class="line"><span class="comment">%% item_config/1, item_config/2</span></span><br><span class="line"><span class="comment">%% ．等配置访问函数</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="4-Linter（代码检查器）"><a href="#4-Linter（代码检查器）" class="headerlink" title="4.Linter（代码检查器）"></a>4.Linter（代码检查器）</h2><p>职责：对语法正确但代码质星不佳的代码发出警告</p>
+<h3 id="检查项"><a href="#检查项" class="headerlink" title="检查项"></a>检查项</h3><p>•未使用的变量<br>•未使用的函数<br>•不可达代码<br>•潜在的运行时错误<br>工程价值<br>•早期发现问题：在编译阶段发现潜在 bug<br>.代码质量保证：强制执行编码规范<br>•性能提示：识别低效的代码模式</p>
+<h3 id="工程价值"><a href="#工程价值" class="headerlink" title="工程价值"></a>工程价值</h3><p>•早期发现问题：在编译阶段发现潜在 bug<br>.代码质量保证：强制执行编码规范<br>•性能提示：识别低效的代码模式</p>
+<h2 id="5-Save-AST-保存抽象语法树）"><a href="#5-Save-AST-保存抽象语法树）" class="headerlink" title="5.Save AST(保存抽象语法树）"></a>5.Save AST(保存抽象语法树）</h2><p>职责：将 AST 存储在 BEAM 文件中，用于调试和静态分析</p>
+<h3 id="启用条件"><a href="#启用条件" class="headerlink" title="启用条件"></a>启用条件</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">%% 編译时添加 debug_info 选项</span><br><span class="line">-compile ([debug_infol).</span><br><span class="line">%% 或</span><br><span class="line">c(Module, [debug_info]).</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看-AST"><a href="#查看-AST" class="headerlink" title="查看 AST"></a>查看 AST</h3><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">%% 从 BEAM 文件中提取 AST</span></span><br><span class="line">&#123;ok, &#123;-, LE&#x27;<span class="string">&quot;Dbgi&quot;</span>, Bin3133 = beam_1ib:chunks C<span class="string">&quot;mod.beam&quot;</span>, [“Dbgi<span class="string">&quot;]).</span></span><br><span class="line"><span class="string">AST = binary_to_term(Bin).</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h3><p>•Dialyzer 静态分析：依赖 AST 进行类型推断和错误检测<br>•调试工具：提供源代码映射，支持断点调试<br>•代码重构：基于 AST 进行自动化代码转换</p>
+<h2 id="6-Expand（扩展阶段）"><a href="#6-Expand（扩展阶段）" class="headerlink" title="6.Expand（扩展阶段）"></a>6.Expand（扩展阶段）</h2><p>职责：将高级 Erlang 结构扩展为底层结构</p>
+<h3 id="转换内容"><a href="#转换内容" class="headerlink" title="转换内容"></a>转换内容</h3><p>•Record - Tuple: #record{field &#x3D; value] 转换为{record, Field, value}</p>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><h5 id="转换前："><a href="#转换前：" class="headerlink" title="转换前："></a>转换前：</h5><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">-record</span> <span class="params">(player, &#123;id, name, level&#125;)</span>.</span><br><span class="line">player = #player tid = I, name =<span class="string">&quot;“&#x27;Alice&quot;</span>, Tevel = <span class="number">105</span></span><br><span class="line">转换后：</span><br><span class="line">Player = &#123;player, <span class="number">1</span>,<span class="string">&quot;Alice&quot;</span>, <span class="number">10</span>&#125;.</span><br></pre></td></tr></table></figure>
+
+<h2 id="7-Core-Erlang-Erlang-中间语言）"><a href="#7-Core-Erlang-Erlang-中间语言）" class="headerlink" title="7.Core Erlang (Erlang 中间语言）"></a>7.Core Erlang (Erlang 中间语言）</h2><p>查看方式：c(mod, to_coreo)</p>
+<p>特点：</p>
+<p>•简化版 Erlang，去掉所有语法糖<br>•明确作用域、变量綁定和函数调用方式<br>•统一的控制流表示<br>设计目标<br>•简化编译器后端：统一的中间表示<br>•优化友好：便于进行各种代码优化<br>•跨平台支持：可转换为不同目标平台代码</p>
+<h2 id="8-Core-Pass（中间语言优化）"><a href="#8-Core-Pass（中间语言优化）" class="headerlink" title="8.Core Pass（中间语言优化）"></a>8.Core Pass（中间语言优化）</h2><p>查看方式：c(mod, to_core)</p>
+<p>职责：对 Core Erlang 进行一系列分析和优化</p>
+<h3 id="优化功能"><a href="#优化功能" class="headerlink" title="优化功能"></a>优化功能</h3><p>1.死代码刪除：移除不可达代码</p>
+<p>2.表达式简化：常量折疊、算术优化<br>3.变量绑定优化：消除无意义的变量绑定</p>
+<h3 id="优化模块"><a href="#优化模块" class="headerlink" title="优化模块"></a>优化模块</h3><p>•sys-core_fold：常量折叠和表达式简化<br>• sys_core_ bsm：二进制操作优化<br>• sys_core_dsm：数据结构优化<br>•sys_core_inline：函数内联<br>• sys_core_alias：别名消除<br>• v3_core：核心优化器</p>
+<h3 id="性能影响"><a href="#性能影响" class="headerlink" title="性能影响"></a>性能影响</h3><p>•编译时间：增加 10-20% 编译时间<br>•运行时性能：提升 5-15% 执行效率<br>.代码大小：通常减少 10-30% BEAM 文件大小</p>
+<h2 id="9-Kernel-Erlang-Kernel-Pass"><a href="#9-Kernel-Erlang-Kernel-Pass" class="headerlink" title="9.Kernel Erlang + Kernel Pass"></a>9.Kernel Erlang + Kernel Pass</h2><p>查看方式：cqod, to_kernel)<br>职责：将Erlang 中间语言向机器层中间语言过渡</p>
+<h3 id="核心转换"><a href="#核心转换" class="headerlink" title="核心转换"></a>核心转换</h3><ol>
+<li>显式化控制流：使用 do &#x2F; goto结构</li>
+<li>寄存器分配准备：为后续代码生成做准备</li>
+<li>异常处理优化：统一异常处理机制</li>
+</ol>
+<h2 id="10-ASM-Pass"><a href="#10-ASM-Pass" class="headerlink" title="10.ASM Pass"></a>10.ASM Pass</h2><p><strong>作用</strong>：从“虚拟机指令“到”机器指令”的桥梁<br><strong>核心任务</strong>：奇存器分配与指令选择<br><strong>扩展</strong>：编译器可以被分为前端和后端。<br>编译器前端负责产生机器无养的中间代码,编译器后端将中间代码转换成Erlang对标机器代码。这样对于一些可以跨平台的编洋器而言,它们可以针对不同的平台使用同一个前端和针对不同机器平台的数个后端</p>
+<h2 id="11-BEAM-汇编（S文件）"><a href="#11-BEAM-汇编（S文件）" class="headerlink" title="11.BEAM 汇编（S文件）"></a>11.BEAM 汇编（S文件）</h2><p>查看方式：c（Mod，’S’） 或编译时生成-s 文件</p>
+<h3 id="核心概念"><a href="#核心概念" class="headerlink" title="核心概念"></a>核心概念</h3><p><strong>模块结构</strong><br>. module ： 模块名<br>• exports：导出函数列表<br>• labels：标签总数（用于跳转）<br>•label：标签定义（代码位置标记）</p>
+<p><strong>函数定义</strong></p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;function, Name, Arity, Label]</span><br><span class="line">•Name：函数名（原子）</span><br><span class="line">• Arity：参数个数</span><br><span class="line">•Label： 函数入口标签</span><br><span class="line">寄存器系统</span><br><span class="line">X寄存器：临时变量，函数参数和返回值</span><br></pre></td></tr></table></figure>
+
+<h3 id="关键指令"><a href="#关键指令" class="headerlink" title="关键指令"></a><strong>关键指令</strong></h3><p>•allocate：分配堆和栈空间<br>(allocate, Stackwords, Heapwords}<br>•deallocate：销毁栈空间<br>{deallocate, Stackwords}<br>•move：移动元素(X奇存器-》丫奇存器）<br>{move, Source, Destination}<br>.call：函数调用<br>(call, Arity, {f, Label})  % 本地调用<br>(call-ext, Arity, textfunc, Module, Function, Arity}) %外部调用</p>
+<h2 id="编译流程总结"><a href="#编译流程总结" class="headerlink" title="编译流程总结"></a>编译流程总结</h2><p><img src="/%5Cpic%5Call%5C%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20260209113501_16_79.jpg" alt="微信图片_20260209113501_16_79"></p>
+<h2 id="12-链接"><a href="#12-链接" class="headerlink" title="12.链接"></a>12.链接</h2><h3 id="1-链接分为静态链接和动态链接。"><a href="#1-链接分为静态链接和动态链接。" class="headerlink" title="1.链接分为静态链接和动态链接。"></a>1.链接分为静态链接和动态链接。</h3><p><strong>静态链接：</strong><br>编泽器和链接器（Id）在生成可执行文件时，会把 a.o和 b.o拼死在一起。如果 a.o里调用了 b.o的函数，链接器会计算好内存地址偏移量，把它们’焊死”。程序跑起来时，CPU 直接跳到那个算好的地址去。<br>动态链接：<br>Erlang 编译器生成 a,beam 和 b.beam 时，它们互不认识。<br>当a 模块运行到调用 b:foo() 这一行时，虛似机(VN）会暂停一下，问：“谁是b？b在哪？b加载了吗？然后现场把它们连起来。</p>
+<h3 id="2-Erlang-链接的两个关键表：导出表与导入表"><a href="#2-Erlang-链接的两个关键表：导出表与导入表" class="headerlink" title="2.Erlang 链接的两个关键表：导出表与导入表"></a>2.Erlang 链接的两个关键表：导出表与导入表</h3><p>我们在上一个问题中用 beam_lib:info（）。 看到的chunk 此时就派上用场了：</p>
+<h4 id="•-ExpT-Export-Table"><a href="#•-ExpT-Export-Table" class="headerlink" title="• ExpT (Export Table)"></a>• ExpT (Export Table)</h4><p>：我对外提供了什么？<br>。例如 Tists.beam 的ExpT 里写着：我有 reverse&#x2F;1. map&#x2F;2。</p>
+<h4 id="•-ImpT-Import-Table"><a href="#•-ImpT-Import-Table" class="headerlink" title="• ImpT (Import Table)"></a>• ImpT (Import Table)</h4><p>：我需要谁？<br>。例如my-code.beam 的ImpT 里写着：我需要 lists:reverse&#x2F;1。<br><strong>链接过程就是 VM 拿着 ImPT 去匹配别人 ExpT 的过程。</strong></p>
+<h3 id="3-Erlang-链接的三种模式（由慢到快）"><a href="#3-Erlang-链接的三种模式（由慢到快）" class="headerlink" title="3.Erlang 链接的三种模式（由慢到快）"></a>3.Erlang 链接的三种模式（由慢到快）</h3><p>Erlang 的链接机制非常智能，它分为几个阶段，目的是为了支持<strong>热代码更新 (Hot Code Loading)</strong></p>
+<h5 id="阶段一：完全动态-Generic-Instruction"><a href="#阶段一：完全动态-Generic-Instruction" class="headerlink" title="阶段一：完全动态 (Generic Instruction)"></a>阶段一：完全动态 (Generic Instruction)</h5><p>当模块刚加载，或者代码还没被频繁执行时。<br>•指令：call_ext (Call External)<br>•行为：VM 看到 lists：reverse(L），它会去一个全局的哈希表 (Export Table）里查 lists 模块的reverse 函数的地址<br>。特点：最慢，但最灵活。因为每次调用都要查表，所以如果你热更新了 Iists模块，下一次查表自然就查到新代码了。</p>
+<h4 id="阶段二：修补-Patching-Back-patching"><a href="#阶段二：修补-Patching-Back-patching" class="headerlink" title="阶段二：修补 (Patching &#x2F; Back-patching)"></a>阶段二：修补 (Patching &#x2F; Back-patching)</h4><p>Erlang VM 发现你老是调这个函数，它觉得每次查表太累了，就会修改字节码。<br>。行为：VM 会把那条 call-ext指令直接改亏成一条指向目标函数内存地址的直接跳转指令。<br>。特点：这就变成了类似C 语言的函数指针调用，速度非常快。</p>
+<h4 id="阶段三：本地调用优化-Local-Call"><a href="#阶段三：本地调用优化-Local-Call" class="headerlink" title="阶段三：本地调用优化 (Local Call)"></a>阶段三：本地调用优化 (Local Call)</h4><p>如果是同一个模块内部调用（比如 a函数调 b 函数），编泽器在编泽成.beam 时就已经算好相对偏移量了不需要查表，直接跳。<br>题外话：动态链接是实现热更新的关键。</p>
+<h2 id="工程实践建议"><a href="#工程实践建议" class="headerlink" title="工程实践建议"></a>工程实践建议</h2><h3 id="1-parse-Transform-使用场景"><a href="#1-parse-Transform-使用场景" class="headerlink" title="1.parse Transform 使用场景"></a>1.parse Transform 使用场景</h3><ul>
+<li>配置代码生成：如 data_parse_trans</li>
+<li>日志注入：自动添加日志调用</li>
+<li>性能监控：自动添加性能统计</li>
+</ul>
+<h3 id="2-调试技巧"><a href="#2-调试技巧" class="headerlink" title="2.调试技巧"></a>2.调试技巧</h3><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">%% 查看各阶段代码</span><br><span class="line">c (Mod, &#x27;P&#x27;). </span><br><span class="line">c(Mod, &#x27;E&#x27;).</span><br><span class="line">c(Mod, to_core0).   % Core Erlang</span><br><span class="line">c(Mod, to_core).    % 优化后的 core</span><br><span class="line">c(Mod, to_kernel).  % Kernel Erlang</span><br><span class="line">c(Mod, &#x27;S&#x27;).        % BEAM 汇编  </span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="陈志伟 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="陈志伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>陈志伟
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2026/02/09/erlang-%E7%BC%96%E8%AF%91/" title="erlang 编译">http://example.com/2026/02/09/erlang-编译/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/02/08/operating-system/" rel="prev" title="操作系统基本介绍">
+      <i class="fa fa-chevron-left"></i> 操作系统基本介绍
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Erlang-%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">Erlang 编译流程深度解析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Scanner%EF%BC%88%E6%89%AB%E6%8F%8F%E5%99%A8%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">1.Scanner（扫描器）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%86%E5%88%AB%E5%85%83%E7%B4%A0%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.1.</span> <span class="nav-text">识别元素类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Preprocessor-%EF%BC%88%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">2.Preprocessor （预处理器）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD"><span class="nav-number">2.2.1.</span> <span class="nav-text">核心功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E6%8A%80%E6%9C%AF%E7%82%B9"><span class="nav-number">2.2.2.</span> <span class="nav-text">关键技术点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E5%BA%94%E7%94%A8"><span class="nav-number">2.2.3.</span> <span class="nav-text">实际应用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Parse-Transform-%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E4%B8%8E%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.2.4.</span> <span class="nav-text">3.Parse Transform(语法分析与转换)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Parse%EF%BC%88%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%EF%BC%89"><span class="nav-number">2.2.5.</span> <span class="nav-text">3.1 Parse（语法分析）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#AST-%E7%BB%93%E6%9E%84%EF%BC%9A"><span class="nav-number">2.2.5.1.</span> <span class="nav-text">AST 结构：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Transform-AST-%E8%BD%AC%E6%8D%A2%EF%BC%89"><span class="nav-number">2.2.6.</span> <span class="nav-text">3.2 Transform (AST 转换）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.6.1.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BD%AC%E6%8D%A2%E6%A8%A1%E5%9D%97%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.2.6.2.</span> <span class="nav-text">转换模块实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BD%AC%E6%8D%A2%E7%A4%BA%E4%BE%8B"><span class="nav-number">2.2.6.3.</span> <span class="nav-text">转换示例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.2.7.</span> <span class="nav-text">项目实践</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Linter%EF%BC%88%E4%BB%A3%E7%A0%81%E6%A3%80%E6%9F%A5%E5%99%A8%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">4.Linter（代码检查器）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5%E9%A1%B9"><span class="nav-number">2.3.1.</span> <span class="nav-text">检查项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A5%E7%A8%8B%E4%BB%B7%E5%80%BC"><span class="nav-number">2.3.2.</span> <span class="nav-text">工程价值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-Save-AST-%E4%BF%9D%E5%AD%98%E6%8A%BD%E8%B1%A1%E8%AF%AD%E6%B3%95%E6%A0%91%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">5.Save AST(保存抽象语法树）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="nav-number">2.4.1.</span> <span class="nav-text">启用条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B-AST"><span class="nav-number">2.4.2.</span> <span class="nav-text">查看 AST</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.4.3.</span> <span class="nav-text">应用场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-Expand%EF%BC%88%E6%89%A9%E5%B1%95%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="nav-number">2.5.</span> <span class="nav-text">6.Expand（扩展阶段）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AC%E6%8D%A2%E5%86%85%E5%AE%B9"><span class="nav-number">2.5.1.</span> <span class="nav-text">转换内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">2.5.2.</span> <span class="nav-text">示例</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BD%AC%E6%8D%A2%E5%89%8D%EF%BC%9A"><span class="nav-number">2.5.2.0.1.</span> <span class="nav-text">转换前：</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-Core-Erlang-Erlang-%E4%B8%AD%E9%97%B4%E8%AF%AD%E8%A8%80%EF%BC%89"><span class="nav-number">2.6.</span> <span class="nav-text">7.Core Erlang (Erlang 中间语言）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-Core-Pass%EF%BC%88%E4%B8%AD%E9%97%B4%E8%AF%AD%E8%A8%80%E4%BC%98%E5%8C%96%EF%BC%89"><span class="nav-number">2.7.</span> <span class="nav-text">8.Core Pass（中间语言优化）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%8A%9F%E8%83%BD"><span class="nav-number">2.7.1.</span> <span class="nav-text">优化功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E6%A8%A1%E5%9D%97"><span class="nav-number">2.7.2.</span> <span class="nav-text">优化模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E5%BD%B1%E5%93%8D"><span class="nav-number">2.7.3.</span> <span class="nav-text">性能影响</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-Kernel-Erlang-Kernel-Pass"><span class="nav-number">2.8.</span> <span class="nav-text">9.Kernel Erlang + Kernel Pass</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.8.1.</span> <span class="nav-text">核心转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-ASM-Pass"><span class="nav-number">2.9.</span> <span class="nav-text">10.ASM Pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-BEAM-%E6%B1%87%E7%BC%96%EF%BC%88S%E6%96%87%E4%BB%B6%EF%BC%89"><span class="nav-number">2.10.</span> <span class="nav-text">11.BEAM 汇编（S文件）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">2.10.1.</span> <span class="nav-text">核心概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E6%8C%87%E4%BB%A4"><span class="nav-number">2.10.2.</span> <span class="nav-text">关键指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B%E6%80%BB%E7%BB%93"><span class="nav-number">2.11.</span> <span class="nav-text">编译流程总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-%E9%93%BE%E6%8E%A5"><span class="nav-number">2.12.</span> <span class="nav-text">12.链接</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E9%93%BE%E6%8E%A5%E5%88%86%E4%B8%BA%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%92%8C%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E3%80%82"><span class="nav-number">2.12.1.</span> <span class="nav-text">1.链接分为静态链接和动态链接。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Erlang-%E9%93%BE%E6%8E%A5%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%85%B3%E9%94%AE%E8%A1%A8%EF%BC%9A%E5%AF%BC%E5%87%BA%E8%A1%A8%E4%B8%8E%E5%AF%BC%E5%85%A5%E8%A1%A8"><span class="nav-number">2.12.2.</span> <span class="nav-text">2.Erlang 链接的两个关键表：导出表与导入表</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E2%80%A2-ExpT-Export-Table"><span class="nav-number">2.12.2.1.</span> <span class="nav-text">• ExpT (Export Table)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E2%80%A2-ImpT-Import-Table"><span class="nav-number">2.12.2.2.</span> <span class="nav-text">• ImpT (Import Table)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Erlang-%E9%93%BE%E6%8E%A5%E7%9A%84%E4%B8%89%E7%A7%8D%E6%A8%A1%E5%BC%8F%EF%BC%88%E7%94%B1%E6%85%A2%E5%88%B0%E5%BF%AB%EF%BC%89"><span class="nav-number">2.12.3.</span> <span class="nav-text">3.Erlang 链接的三种模式（由慢到快）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%B8%80%EF%BC%9A%E5%AE%8C%E5%85%A8%E5%8A%A8%E6%80%81-Generic-Instruction"><span class="nav-number">2.12.3.0.1.</span> <span class="nav-text">阶段一：完全动态 (Generic Instruction)</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%BA%8C%EF%BC%9A%E4%BF%AE%E8%A1%A5-Patching-Back-patching"><span class="nav-number">2.12.3.1.</span> <span class="nav-text">阶段二：修补 (Patching &#x2F; Back-patching)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%98%B6%E6%AE%B5%E4%B8%89%EF%BC%9A%E6%9C%AC%E5%9C%B0%E8%B0%83%E7%94%A8%E4%BC%98%E5%8C%96-Local-Call"><span class="nav-number">2.12.3.2.</span> <span class="nav-text">阶段三：本地调用优化 (Local Call)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5%E5%BB%BA%E8%AE%AE"><span class="nav-number">2.13.</span> <span class="nav-text">工程实践建议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-parse-Transform-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.13.1.</span> <span class="nav-text">1.parse Transform 使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="nav-number">2.13.2.</span> <span class="nav-text">2.调试技巧</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陈志伟</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.suexcxine.win/" title="http:&#x2F;&#x2F;blog.suexcxine.win&#x2F;" rel="noopener" target="_blank">Suex_Cxine</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/zhongwencool/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;zhongwencool&#x2F;" rel="noopener" target="_blank">zhongwen</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈志伟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
