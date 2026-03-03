@@ -27,11 +27,15 @@
 <meta property="og:site_name" content="陈志伟&#96;s Blog">
 <meta property="og:description" content="概述该篇主要讲解inet:setopts 中packet参数">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/pic/all/image-20260303150852087.png">
+<meta property="og:image" content="http://example.com/pic/all/image-20260303151426627.png">
+<meta property="og:image" content="http://example.com/pic/all/image-20260303152051961.png">
 <meta property="article:published_time" content="2026-02-06T09:48:49.000Z">
-<meta property="article:modified_time" content="2026-02-08T03:04:12.624Z">
+<meta property="article:modified_time" content="2026-03-03T07:25:40.821Z">
 <meta property="article:author" content="陈志伟">
 <meta property="article:tag" content="adawdawd">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/pic/all/image-20260303150852087.png">
 
 <link rel="canonical" href="http://example.com/2026/02/06/inetpacket/">
 
@@ -187,7 +191,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-02-08 11:04:12" itemprop="dateModified" datetime="2026-02-08T11:04:12+08:00">2026-02-08</time>
+                <time title="修改时间：2026-03-03 15:25:40" itemprop="dateModified" datetime="2026-03-03T15:25:40+08:00">2026-03-03</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -235,7 +239,24 @@
 <p>可以recv2次， 第一次固定Len，主要获取  数据长度，  第二次只获取Len长度数据。即是一次完整协议。</p>
 <p>要是没收到消息 一直阻塞吗？</p>
 <p>recv可以设置超时时间。</p>
-<h3 id="4-丢包呢？"><a href="#4-丢包呢？" class="headerlink" title="4.丢包呢？"></a>4.丢包呢？</h3><p>tcp传输层有保证数据完整， 具体可以看Tcp实现</p>
+<h3 id="4-丢包呢？"><a href="#4-丢包呢？" class="headerlink" title="4.丢包呢？"></a>4.丢包呢？</h3><p>Tcp中有超时重传、快速重传、SACK、D-SACK等多种机制防止丢包</p>
+<h5 id="正常传输流程"><a href="#正常传输流程" class="headerlink" title="正常传输流程"></a>正常传输流程</h5><p><img src="/../pic/all/image-20260303150852087.png" alt="image-20260303150852087"></p>
+<p>以下主要介绍超时重传和快速重传。</p>
+<h6 id="超时重传"><a href="#超时重传" class="headerlink" title="超时重传"></a>超时重传</h6><p>发送发设置一个定时器，在指定的时间内没有收到ACK确认报文，就会重新发送一次</p>
+<p>2中情况会丢失：</p>
+<ol>
+<li>数据包丢失</li>
+<li>ACK应答包丢失</li>
+</ol>
+<p><img src="/../pic/all/image-20260303151426627.png" alt="image-20260303151426627"></p>
+<p>RTT：数据发送时刻到接受确认的时刻时差</p>
+<p>RTO：超时重传时间。</p>
+<p>那超时时间设置多少呢？</p>
+<p>RTO时间略大RTT时间即可。但是问题在于 RTT时间是动态变化。所以有特定的公式解决，具体不细讲。</p>
+<h6 id="立即重传"><a href="#立即重传" class="headerlink" title="立即重传"></a>立即重传</h6><p><img src="/../pic/all/image-20260303152051961.png" alt="image-20260303152051961"></p>
+<p>这里会遇到一个问题， 假设Seq3也丢失了，接受方只会回答ACK2未收到。 那重传将Seq2后面的所有再发送吗?  那这样效率太低了。 有下面的SACK</p>
+<h6 id="SACK"><a href="#SACK" class="headerlink" title="SACK"></a>SACK</h6><p>简单介绍： 其实就是将返回数据携带一些信息，哪些没有收到</p>
+<h6 id="D-SACK"><a href="#D-SACK" class="headerlink" title="D-SACK"></a>D-SACK</h6><p>简单介绍： 、在SACK上 ，返回哪些重复接收</p>
 
     </div>
 
@@ -353,7 +374,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-packet%E5%8F%AF%E9%80%89%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.1.</span> <span class="nav-text">1. packet可选模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1%E8%BF%99%E9%87%8C%E6%A0%BC%E5%A4%96%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B-%E4%B8%BB%E5%8A%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E8%A2%AB%E5%8A%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1这里格外介绍一下 主动模式和被动模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E5%90%84%E6%A8%A1%E5%BC%8F%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">2各模式区别？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1%E6%A1%88%E4%BE%8B%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1案例实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%90%84%E6%A8%A1%E5%BC%8F%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98%E3%80%82"><span class="nav-number">1.3.</span> <span class="nav-text">3.各模式粘包问题。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%B8%A2%E5%8C%85%E5%91%A2%EF%BC%9F"><span class="nav-number">1.3.1.</span> <span class="nav-text">4.丢包呢？</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-packet%E5%8F%AF%E9%80%89%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.1.</span> <span class="nav-text">1. packet可选模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1%E8%BF%99%E9%87%8C%E6%A0%BC%E5%A4%96%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B-%E4%B8%BB%E5%8A%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E8%A2%AB%E5%8A%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1这里格外介绍一下 主动模式和被动模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E5%90%84%E6%A8%A1%E5%BC%8F%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">2各模式区别？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1%E6%A1%88%E4%BE%8B%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1案例实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%90%84%E6%A8%A1%E5%BC%8F%E7%B2%98%E5%8C%85%E9%97%AE%E9%A2%98%E3%80%82"><span class="nav-number">1.3.</span> <span class="nav-text">3.各模式粘包问题。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%B8%A2%E5%8C%85%E5%91%A2%EF%BC%9F"><span class="nav-number">1.3.1.</span> <span class="nav-text">4.丢包呢？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%AD%A3%E5%B8%B8%E4%BC%A0%E8%BE%93%E6%B5%81%E7%A8%8B"><span class="nav-number">1.3.1.0.1.</span> <span class="nav-text">正常传输流程</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0"><span class="nav-number">1.3.1.0.1.1.</span> <span class="nav-text">超时重传</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%AB%8B%E5%8D%B3%E9%87%8D%E4%BC%A0"><span class="nav-number">1.3.1.0.1.2.</span> <span class="nav-text">立即重传</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#SACK"><span class="nav-number">1.3.1.0.1.3.</span> <span class="nav-text">SACK</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#D-SACK"><span class="nav-number">1.3.1.0.1.4.</span> <span class="nav-text">D-SACK</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

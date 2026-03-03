@@ -793,10 +793,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2026-02-08 11:31:37 / 修改时间：12:31:24" itemprop="dateCreated datePublished" datetime="2026-02-08T11:31:37+08:00">2026-02-08</time>
+              <time title="创建时间：2026-02-08 11:31:37" itemprop="dateCreated datePublished" datetime="2026-02-08T11:31:37+08:00">2026-02-08</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-03-03 15:14:41" itemprop="dateModified" datetime="2026-03-03T15:14:41+08:00">2026-03-03</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -818,7 +824,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Erlang定时器介绍</p>
+          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>本文简单介绍 Erlang 中常见的几种定时器用法，以及底层 <code>erl_timer</code> 时间轮的实现原理。重点讨论一个常见问题：<strong>当取消定时器时，超时消息已经到达邮箱，该如何处理？</strong></p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2026/02/08/erlang-timer/#more" rel="contents">
@@ -876,7 +882,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-03-03 14:25:44" itemprop="dateModified" datetime="2026-03-03T14:25:44+08:00">2026-03-03</time>
+                <time title="修改时间：2026-03-03 14:38:04" itemprop="dateModified" datetime="2026-03-03T14:38:04+08:00">2026-03-03</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -899,7 +905,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>行为树（Behavior Tree，简称 BT）是一种常见的 AI 决策结构，广泛用于游戏 NPC、机器人和自动化流程控制。<br>它把复杂行为拆成可组合的节点，每帧（或每次调度）从根节点开始执行，最后返回状态。<br>本文只覆盖行为树的基础概念和常规落地流程，不展开进阶设计。</p>
+          <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>行为树（Behavior Tree，简称 BT）是一种常见的 AI 决策结构，广泛用于游戏 NPC、机器人和自动化流程控制。<br>它把复杂行为拆成可组合的节点，每帧（或每次调度）从根节点开始执行，并最终返回一个状态。<br>本文只覆盖行为树的基础概念和常规落地流程，不展开进阶设计。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2026/02/08/behavior-tree/#more" rel="contents">
