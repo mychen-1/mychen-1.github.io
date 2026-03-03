@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="概述行为树介绍">
+  <meta name="description" content="概述行为树（Behavior Tree，简称 BT）是一种常见的 AI 决策结构，广泛用于游戏 NPC、机器人和自动化流程控制。它把复杂行为拆成可组合的节点，每帧（或每次调度）从根节点开始执行，最后返回状态。本文只覆盖行为树的基础概念和常规落地流程，不展开进阶设计。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="行为树介绍">
 <meta property="og:url" content="http://example.com/2026/02/08/behavior-tree/index.html">
 <meta property="og:site_name" content="陈志伟&#96;s Blog">
-<meta property="og:description" content="概述行为树介绍">
+<meta property="og:description" content="概述行为树（Behavior Tree，简称 BT）是一种常见的 AI 决策结构，广泛用于游戏 NPC、机器人和自动化流程控制。它把复杂行为拆成可组合的节点，每帧（或每次调度）从根节点开始执行，最后返回状态。本文只覆盖行为树的基础概念和常规落地流程，不展开进阶设计。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-02-08T03:30:04.000Z">
-<meta property="article:modified_time" content="2026-02-08T04:11:29.353Z">
+<meta property="article:modified_time" content="2026-03-03T06:25:44.816Z">
 <meta property="article:author" content="陈志伟">
 <meta property="article:tag" content="adawdawd">
 <meta name="twitter:card" content="summary">
@@ -179,10 +179,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2026-02-08 11:30:04 / 修改时间：12:11:29" itemprop="dateCreated datePublished" datetime="2026-02-08T11:30:04+08:00">2026-02-08</time>
+              <time title="创建时间：2026-02-08 11:30:04" itemprop="dateCreated datePublished" datetime="2026-02-08T11:30:04+08:00">2026-02-08</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-03-03 14:25:44" itemprop="dateModified" datetime="2026-03-03T14:25:44+08:00">2026-03-03</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -204,52 +210,137 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>行为树介绍</p>
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>行为树（Behavior Tree，简称 BT）是一种常见的 AI 决策结构，广泛用于游戏 NPC、机器人和自动化流程控制。<br>它把复杂行为拆成可组合的节点，每帧（或每次调度）从根节点开始执行，最后返回状态。<br>本文只覆盖行为树的基础概念和常规落地流程，不展开进阶设计。</p>
 <span id="more"></span>
 
-<h1 id="行为树"><a href="#行为树" class="headerlink" title="行为树"></a>行为树</h1><p>简介：  行为树包含逻辑节点和 行为树结构，每次寻找一个节点时候， 都从根节点出发。</p>
-<p>构成：</p>
-<p>​	1.行为树有四种状态  ①成功  ②失败 ③持续运行  ④错误</p>
-<p>​	2.行为树分为两部分： 树集合 、节点集合</p>
-<p>​		树集合：归类每一个行为树AI根节点</p>
-<p>​		节点集合： 分为四个 组合节点、装饰节点、动作节点、条件节点</p>
-<h2 id="节点集合"><a href="#节点集合" class="headerlink" title="节点集合"></a>节点集合</h2><h3 id="组合节点"><a href="#组合节点" class="headerlink" title="组合节点"></a>组合节点</h3><p>序列节点： 实现 and 功能    Sequence</p>
-<p>记忆序列节点：也是and功能   只是会记忆当前运行节点     MemSeqence</p>
-<p>选择节点：or 功能   Priority</p>
-<p>记忆选择节点：类似  MemPriority</p>
-<h3 id="装饰器节点"><a href="#装饰器节点" class="headerlink" title="装饰器节点"></a>装饰器节点</h3><p>重复节点：重复n次 返回结果    Repeat</p>
-<p>重复到失败节点：   Repeat   until  Failure</p>
-<p>重复到成功节点：   Repeat Until Success</p>
-<p>反转节点： 将结果 “失败‘ ”成功“ 反转。 运行在不变</p>
-<p>限制次数执行节点：</p>
-<h2 id="动作节点"><a href="#动作节点" class="headerlink" title="动作节点"></a>动作节点</h2><p>执行具体的任务： 如“移动到某点”</p>
-<h2 id="条件节点"><a href="#条件节点" class="headerlink" title="条件节点"></a>条件节点</h2><p>判断某个条件是否成立， 如“是否生命值低于1000”</p>
-<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>behavior3编译导出后 会产生一个json格式，节点主要包含如下重要字段：</p>
-<p>id：全局唯一id</p>
-<p>name：节点名</p>
-<p>cotegory:节点类型  区分子树</p>
-<p>properties：节点配置属性，  实际运行时控制循环次数、等待时间等定制参数</p>
-<p>children：节点的子节点列表</p>
-<p><strong>blackboard（黑板）</strong>：存放数据的地方。 某个树的详细信息存储</p>
-<h2 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h2><p>主要三个 回调函数  open   tick   close </p>
-<p>执行顺序 open（开始前） -&gt;  tick（运行） -&gt; close（开始后）</p>
-<h2 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h2><p>1.先使用 behavior3Editor 编辑器， 根据实际需求画流程图  然后导出 json文件</p>
-<ol start="2">
-<li><p>代码  初始化行为树</p>
-<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">behavior_tree:load_tree_file(json路径)</span><br><span class="line"><span class="function"><span class="title">load_tree_file</span><span class="params">(json)</span> -&gt;</span></span><br><span class="line">    &#123;ok, Json&#125; = file:read_file(json),</span><br><span class="line">    JsonTerm = jsx:decode(json, [return_maps]),</span><br><span class="line">    ...</span><br><span class="line"><span class="keyword">end</span>,</span><br><span class="line">其实就是读取 json文件  根据节点字段 加载对应信息</span><br></pre></td></tr></table></figure>
+<h2 id="行为树是什么"><a href="#行为树是什么" class="headerlink" title="行为树是什么"></a>行为树是什么</h2><p>行为树本质上是“树形状态机”，由<strong>节点</strong>和<strong>执行器</strong>组成：</p>
+<ul>
+<li>执行器每次从根节点开始 <code>tick</code></li>
+<li>节点根据规则向下执行子节点</li>
+<li>子节点返回状态，父节点据此决定下一步</li>
+</ul>
+<p>行为树常见四种返回状态：</p>
+<ul>
+<li><code>SUCCESS</code>：当前节点成功完成</li>
+<li><code>FAILURE</code>：当前节点失败</li>
+<li><code>RUNNING</code>：当前节点还在执行，下次继续</li>
+<li><code>ERROR</code>：配置或运行异常（可选，部分实现不用）</li>
+</ul>
+<h2 id="节点分类"><a href="#节点分类" class="headerlink" title="节点分类"></a>节点分类</h2><h3 id="1-组合节点（Composite）"><a href="#1-组合节点（Composite）" class="headerlink" title="1) 组合节点（Composite）"></a>1) 组合节点（Composite）</h3><p>用于组织子节点的执行顺序，是树的骨架。</p>
+<ul>
+<li><code>Sequence</code>（序列，类似 AND）<br>从左到右执行，遇到 <code>FAILURE</code> 立即失败；全部成功才成功。</li>
+<li><code>MemSequence</code>（记忆序列）<br>与 Sequence 类似，但会记住上次运行位置，适合长流程。</li>
+<li><code>Priority</code> &#x2F; <code>Selector</code>（选择，类似 OR）<br>从左到右尝试，遇到 <code>SUCCESS</code> 立即成功；都失败才失败。</li>
+<li><code>MemPriority</code>（记忆选择）<br>记住上次命中的分支，减少重复判断开销。</li>
+</ul>
+<h3 id="2-装饰器节点（Decorator）"><a href="#2-装饰器节点（Decorator）" class="headerlink" title="2) 装饰器节点（Decorator）"></a>2) 装饰器节点（Decorator）</h3><p>用于“包裹”一个子节点并修改其行为。</p>
+<ul>
+<li><code>Repeat</code>：重复执行 N 次</li>
+<li><code>RepeatUntilFailure</code>：直到失败才停止</li>
+<li><code>RepeatUntilSuccess</code>：直到成功才停止</li>
+<li><code>Inverter</code>：反转结果（成功&lt;-&gt;失败，运行态一般保持不变）</li>
+<li><code>Limiter</code>：限制最大执行次数</li>
+</ul>
+<h3 id="3-条件节点（Condition）"><a href="#3-条件节点（Condition）" class="headerlink" title="3) 条件节点（Condition）"></a>3) 条件节点（Condition）</h3><p>只做判断，不执行动作。例如：</p>
+<ul>
+<li>是否有目标</li>
+<li>是否在攻击范围内</li>
+<li>生命值是否低于阈值</li>
+</ul>
+<h3 id="4-动作节点（Action）"><a href="#4-动作节点（Action）" class="headerlink" title="4) 动作节点（Action）"></a>4) 动作节点（Action）</h3><p>执行具体行为。例如：</p>
+<ul>
+<li>移动到目标点</li>
+<li>播放技能</li>
+<li>巡逻到下一个路径点</li>
+</ul>
+<h2 id="执行机制（open-tick-close）"><a href="#执行机制（open-tick-close）" class="headerlink" title="执行机制（open &#x2F; tick &#x2F; close）"></a>执行机制（open &#x2F; tick &#x2F; close）</h2><p>在 behavior3 系实现中，节点一般有三个关键回调：</p>
+<ul>
+<li><code>open</code>：节点首次进入时触发（初始化）</li>
+<li><code>tick</code>：每次调度都会调用（核心逻辑）</li>
+<li><code>close</code>：节点结束时触发（清理状态）</li>
+</ul>
+<p>典型顺序：</p>
+<p><code>open -&gt; tick -&gt; (RUNNING 时反复 tick) -&gt; close</code></p>
+<blockquote>
+<p>如果节点持续返回 <code>RUNNING</code>，下一帧会继续进入该节点，直到返回成功或失败。</p>
+</blockquote>
+<h2 id="黑板（Blackboard）"><a href="#黑板（Blackboard）" class="headerlink" title="黑板（Blackboard）"></a>黑板（Blackboard）</h2><p>黑板是行为树共享数据存储，常用于跨节点通信：</p>
+<ul>
+<li>记录目标、路径、冷却时间</li>
+<li>保存临时状态（如“本次巡逻索引”）</li>
+<li>做上下文隔离（全局 &#x2F; 树级 &#x2F; 节点级）</li>
+</ul>
+<p>建议：尽量把“会变化的数据”放黑板，不要写死在节点内部。</p>
+<h2 id="behavior3-Erlang-落地流程"><a href="#behavior3-Erlang-落地流程" class="headerlink" title="behavior3 + Erlang 落地流程"></a>behavior3 + Erlang 落地流程</h2><h3 id="1-在-behavior3Editor-画树并导出-JSON"><a href="#1-在-behavior3Editor-画树并导出-JSON" class="headerlink" title="1. 在 behavior3Editor 画树并导出 JSON"></a>1. 在 behavior3Editor 画树并导出 JSON</h3><p>导出文件通常包含：</p>
+<ul>
+<li><code>id</code>：全局唯一 ID</li>
+<li><code>name</code>：节点名</li>
+<li><code>category</code>：节点类别（composite&#x2F;decorator&#x2F;action&#x2F;condition）</li>
+<li><code>properties</code>：节点参数（次数、时间、阈值等）</li>
+<li><code>children</code>：子节点列表</li>
+</ul>
+<h3 id="2-读取-JSON-并构建运行时结构"><a href="#2-读取-JSON-并构建运行时结构" class="headerlink" title="2. 读取 JSON 并构建运行时结构"></a>2. 读取 JSON 并构建运行时结构</h3><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">%% behavior_tree:load_tree_file(&quot;priv/ai/guard.json&quot;).</span></span><br><span class="line"><span class="function"><span class="title">load_tree_file</span><span class="params">(Path)</span> -&gt;</span></span><br><span class="line">    &#123;ok, Bin&#125; = file:read_file(Path),</span><br><span class="line">    Json = jsx:decode(Bin, [return_maps]),</span><br><span class="line">    <span class="comment">%% 根据 nodes / trees / custom_nodes 构建内部结构</span></span><br><span class="line">    build_runtime_tree(Json).</span><br></pre></td></tr></table></figure>
 
-<p>3.放入ets中，  分为三种  Title， Tree  TreeNode</p>
-<p>4.每个机器人登录   读取配置  配置配置对应功能权重， 随机到具体功能 ，读取对应配置， 执行流程。</p>
+<h3 id="3-缓存到-ETS（按你当前思路）"><a href="#3-缓存到-ETS（按你当前思路）" class="headerlink" title="3. 缓存到 ETS（按你当前思路）"></a>3. 缓存到 ETS（按你当前思路）</h3><p>可拆成三类表（命名示例）：</p>
+<ul>
+<li><code>bt_title</code>：行为树元信息</li>
+<li><code>bt_tree</code>：树定义</li>
+<li><code>bt_node</code>：节点定义（节点 ID -&gt; 配置）</li>
+</ul>
+<h3 id="4-角色登录后绑定行为树"><a href="#4-角色登录后绑定行为树" class="headerlink" title="4. 角色登录后绑定行为树"></a>4. 角色登录后绑定行为树</h3><p>流程建议：</p>
+<ol>
+<li>根据角色类型和权重选择树  </li>
+<li>初始化黑板（角色 ID、初始目标等）  </li>
+<li>定时 <code>tick</code> 执行  </li>
+<li>把执行结果回写到战斗&#x2F;移动系统</li>
+</ol>
+<p>一个极简的 Erlang 调用示例（伪代码）：</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">loop</span><span class="params">(State = #&#123;tree := Tree, blackboard := BB&#125;)</span> -&gt;</span></span><br><span class="line">    NewBB = behavior_tree:tick(Tree, BB),</span><br><span class="line">    <span class="comment">%% 根据黑板里的结果驱动移动/战斗等系统</span></span><br><span class="line">    NewState = State#&#123;blackboard := NewBB&#125;,</span><br><span class="line">    timer:sleep(<span class="number">100</span>),   <span class="comment">%% 每 100ms tick 一次</span></span><br><span class="line">    loop(NewState).</span><br></pre></td></tr></table></figure>
+
+<h2 id="一个常见-AI-例子（守卫）"><a href="#一个常见-AI-例子（守卫）" class="headerlink" title="一个常见 AI 例子（守卫）"></a>一个常见 AI 例子（守卫）</h2><p>根节点使用 <code>Priority</code>：</p>
+<ol>
+<li>条件：发现敌人？  <ul>
+<li>是 -&gt; 序列：追击 -&gt; 攻击</li>
+</ul>
+</li>
+<li>条件：血量低？  <ul>
+<li>是 -&gt; 动作：撤退回血</li>
+</ul>
+</li>
+<li>否则  <ul>
+<li>动作：巡逻</li>
+</ul>
 </li>
 </ol>
-<p>文档链接：</p>
-<p>1.行为树介绍：<a target="_blank" rel="noopener" href="https://note.youdao.com/s">https://note.youdao.com/s</a></p>
-<p>2.组合节点：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=f30ce2503a280e88bc7559710a48f580&type=note&_time=1747893720741">https://note.youdao.com/ynoteshare/index.html?id=f30ce2503a280e88bc7559710a48f580&amp;type=note&amp;_time=1747893720741</a></p>
-<p>3.装饰器节点：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=b9993e6c6027759517d99d13307d5694&type=note&_time=1747895451901">https://note.youdao.com/ynoteshare/index.html?id=b9993e6c6027759517d99d13307d5694&amp;type=note&amp;_time=1747895451901</a></p>
-<p>4自定义节点：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=5f6bef7d092105c9d27b8f7696432980&type=note&_time=1747214601601">https://note.youdao.com/ynoteshare/index.html?id=5f6bef7d092105c9d27b8f7696432980&amp;type=note&amp;_time=1747214601601</a></p>
-<p>5：行为树加载：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=3015421942fafe2c09aacaef7990173c&type=note&_time=1747896586527">https://note.youdao.com/ynoteshare/index.html?id=3015421942fafe2c09aacaef7990173c&amp;type=note&amp;_time=1747896586527</a></p>
-<p>6：节点执行：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=ad915819d8f7cad146176ff8fad9adb8&type=note&_time=1747898757843">https://note.youdao.com/ynoteshare/index.html?id=ad915819d8f7cad146176ff8fad9adb8&amp;type=note&amp;_time=1747898757843</a></p>
-<p>8 ai：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=c0d89fd291827442ed6ab2ca938403c1&type=note&_time=1747899930381">https://note.youdao.com/ynoteshare/index.html?id=c0d89fd291827442ed6ab2ca938403c1&amp;type=note&amp;_time=1747899930381</a></p>
+<p>这种结构比大 if-else 更清晰，也更容易扩展。</p>
+<h2 id="行为树的优缺点"><a href="#行为树的优缺点" class="headerlink" title="行为树的优缺点"></a>行为树的优缺点</h2><p>优点：</p>
+<ul>
+<li>可视化强，便于策划和程序协作</li>
+<li>模块化高，复用节点成本低</li>
+<li>易扩展，新增行为通常只改局部子树</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>树过大后维护成本会上升</li>
+<li>黑板数据混乱时排查困难</li>
+<li><code>RUNNING</code> 节点处理不当会出现“卡行为”</li>
+</ul>
+<h2 id="实战建议"><a href="#实战建议" class="headerlink" title="实战建议"></a>实战建议</h2><ul>
+<li>节点命名统一（动词开头），方便定位日志</li>
+<li>给关键节点加调试日志：进入、退出、返回状态</li>
+<li>对 <code>RUNNING</code> 节点设置超时或兜底失败条件</li>
+<li>黑板字段做命名空间，避免冲突</li>
+<li>把“条件判断”和“动作执行”分离，避免副作用</li>
+</ul>
+<h2 id="文档链接"><a href="#文档链接" class="headerlink" title="文档链接"></a>文档链接</h2><ol>
+<li>行为树介绍：<a target="_blank" rel="noopener" href="https://note.youdao.com/s">https://note.youdao.com/s</a>  </li>
+<li>组合节点：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=f30ce2503a280e88bc7559710a48f580&type=note&_time=1747893720741">https://note.youdao.com/ynoteshare/index.html?id=f30ce2503a280e88bc7559710a48f580&amp;type=note&amp;_time=1747893720741</a>  </li>
+<li>装饰器节点：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=b9993e6c6027759517d99d13307d5694&type=note&_time=1747895451901">https://note.youdao.com/ynoteshare/index.html?id=b9993e6c6027759517d99d13307d5694&amp;type=note&amp;_time=1747895451901</a>  </li>
+<li>自定义节点：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=5f6bef7d092105c9d27b8f7696432980&type=note&_time=1747214601601">https://note.youdao.com/ynoteshare/index.html?id=5f6bef7d092105c9d27b8f7696432980&amp;type=note&amp;_time=1747214601601</a>  </li>
+<li>行为树加载：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=3015421942fafe2c09aacaef7990173c&type=note&_time=1747896586527">https://note.youdao.com/ynoteshare/index.html?id=3015421942fafe2c09aacaef7990173c&amp;type=note&amp;_time=1747896586527</a>  </li>
+<li>节点执行：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=ad915819d8f7cad146176ff8fad9adb8&type=note&_time=1747898757843">https://note.youdao.com/ynoteshare/index.html?id=ad915819d8f7cad146176ff8fad9adb8&amp;type=note&amp;_time=1747898757843</a>  </li>
+<li>AI 相关：<a target="_blank" rel="noopener" href="https://note.youdao.com/ynoteshare/index.html?id=c0d89fd291827442ed6ab2ca938403c1&type=note&_time=1747899930381">https://note.youdao.com/ynoteshare/index.html?id=c0d89fd291827442ed6ab2ca938403c1&amp;type=note&amp;_time=1747899930381</a></li>
+</ol>
 
     </div>
 
@@ -367,7 +458,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A1%8C%E4%B8%BA%E6%A0%91"><span class="nav-number">2.</span> <span class="nav-text">行为树</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E9%9B%86%E5%90%88"><span class="nav-number">2.1.</span> <span class="nav-text">节点集合</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%84%E5%90%88%E8%8A%82%E7%82%B9"><span class="nav-number">2.1.1.</span> <span class="nav-text">组合节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A3%85%E9%A5%B0%E5%99%A8%E8%8A%82%E7%82%B9"><span class="nav-number">2.1.2.</span> <span class="nav-text">装饰器节点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E4%BD%9C%E8%8A%82%E7%82%B9"><span class="nav-number">2.2.</span> <span class="nav-text">动作节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E8%8A%82%E7%82%B9"><span class="nav-number">2.3.</span> <span class="nav-text">条件节点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C"><span class="nav-number">3.2.</span> <span class="nav-text">运行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-number">3.3.</span> <span class="nav-text">流程</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%8C%E4%B8%BA%E6%A0%91%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">1.1.</span> <span class="nav-text">行为树是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E5%88%86%E7%B1%BB"><span class="nav-number">1.2.</span> <span class="nav-text">节点分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%BB%84%E5%90%88%E8%8A%82%E7%82%B9%EF%BC%88Composite%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">1) 组合节点（Composite）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%A3%85%E9%A5%B0%E5%99%A8%E8%8A%82%E7%82%B9%EF%BC%88Decorator%EF%BC%89"><span class="nav-number">1.2.2.</span> <span class="nav-text">2) 装饰器节点（Decorator）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%9D%A1%E4%BB%B6%E8%8A%82%E7%82%B9%EF%BC%88Condition%EF%BC%89"><span class="nav-number">1.2.3.</span> <span class="nav-text">3) 条件节点（Condition）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%8A%A8%E4%BD%9C%E8%8A%82%E7%82%B9%EF%BC%88Action%EF%BC%89"><span class="nav-number">1.2.4.</span> <span class="nav-text">4) 动作节点（Action）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6%EF%BC%88open-tick-close%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">执行机制（open &#x2F; tick &#x2F; close）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%BB%91%E6%9D%BF%EF%BC%88Blackboard%EF%BC%89"><span class="nav-number">1.4.</span> <span class="nav-text">黑板（Blackboard）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#behavior3-Erlang-%E8%90%BD%E5%9C%B0%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.</span> <span class="nav-text">behavior3 + Erlang 落地流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%9C%A8-behavior3Editor-%E7%94%BB%E6%A0%91%E5%B9%B6%E5%AF%BC%E5%87%BA-JSON"><span class="nav-number">1.5.1.</span> <span class="nav-text">1. 在 behavior3Editor 画树并导出 JSON</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%AF%BB%E5%8F%96-JSON-%E5%B9%B6%E6%9E%84%E5%BB%BA%E8%BF%90%E8%A1%8C%E6%97%B6%E7%BB%93%E6%9E%84"><span class="nav-number">1.5.2.</span> <span class="nav-text">2. 读取 JSON 并构建运行时结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E7%BC%93%E5%AD%98%E5%88%B0-ETS%EF%BC%88%E6%8C%89%E4%BD%A0%E5%BD%93%E5%89%8D%E6%80%9D%E8%B7%AF%EF%BC%89"><span class="nav-number">1.5.3.</span> <span class="nav-text">3. 缓存到 ETS（按你当前思路）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E8%A7%92%E8%89%B2%E7%99%BB%E5%BD%95%E5%90%8E%E7%BB%91%E5%AE%9A%E8%A1%8C%E4%B8%BA%E6%A0%91"><span class="nav-number">1.5.4.</span> <span class="nav-text">4. 角色登录后绑定行为树</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E5%B8%B8%E8%A7%81-AI-%E4%BE%8B%E5%AD%90%EF%BC%88%E5%AE%88%E5%8D%AB%EF%BC%89"><span class="nav-number">1.6.</span> <span class="nav-text">一个常见 AI 例子（守卫）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%8C%E4%B8%BA%E6%A0%91%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.7.</span> <span class="nav-text">行为树的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E5%BB%BA%E8%AE%AE"><span class="nav-number">1.8.</span> <span class="nav-text">实战建议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E6%A1%A3%E9%93%BE%E6%8E%A5"><span class="nav-number">1.9.</span> <span class="nav-text">文档链接</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -381,14 +472,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">12</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
