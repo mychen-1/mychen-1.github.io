@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述游戏服务器是典型的数据密集型系统，对实时性要求高，缓存设计直接影响响应速度与磁盘 I&#x2F;O。本文介绍四种 Erlang 游戏服务器缓存架构，并结合实践分析其优劣。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Erlang 游戏服务器缓存设计">
+<meta property="og:url" content="http://example.com/2025/11/05/Erlang%E6%B8%B8%E6%88%8F%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="概述游戏服务器是典型的数据密集型系统，对实时性要求高，缓存设计直接影响响应速度与磁盘 I&#x2F;O。本文介绍四种 Erlang 游戏服务器缓存架构，并结合实践分析其优劣。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-11-05T09:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-09T07:10:04.854Z">
+<meta property="article:author" content="陈志伟">
+<meta property="article:tag" content="adawdawd">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/11/05/Erlang%E6%B8%B8%E6%88%8F%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Erlang 游戏服务器缓存设计 | 陈志伟`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">陈志伟`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/05/Erlang%E6%B8%B8%E6%88%8F%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陈志伟">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="陈志伟`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Erlang 游戏服务器缓存设计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-11-05 17:00:00" itemprop="dateCreated datePublished" datetime="2025-11-05T17:00:00+08:00">2025-11-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-03-09 15:10:04" itemprop="dateModified" datetime="2026-03-09T15:10:04+08:00">2026-03-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/" itemprop="url" rel="index"><span itemprop="name">游戏开发</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>游戏服务器是典型的数据密集型系统，对实时性要求高，缓存设计直接影响响应速度与磁盘 I&#x2F;O。本文介绍四种 Erlang 游戏服务器缓存架构，并结合实践分析其优劣。</p>
+<span id="more"></span>
+
+<h2 id="一、Erlang-常用缓存方式"><a href="#一、Erlang-常用缓存方式" class="headerlink" title="一、Erlang 常用缓存方式"></a>一、Erlang 常用缓存方式</h2><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>mnesia</strong></td>
+<td>全服共享，支持分布式部署</td>
+</tr>
+<tr>
+<td><strong>ETS</strong></td>
+<td>内存表，全服共享</td>
+</tr>
+<tr>
+<td><strong>进程字典</strong></td>
+<td>进程独享数据</td>
+</tr>
+<tr>
+<td><strong>进程 state</strong></td>
+<td>进程状态数据</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="二、缓存设计一：玩家进程-ETS-定时读写"><a href="#二、缓存设计一：玩家进程-ETS-定时读写" class="headerlink" title="二、缓存设计一：玩家进程 + ETS + 定时读写"></a>二、缓存设计一：玩家进程 + ETS + 定时读写</h2><h3 id="2-1-架构示意"><a href="#2-1-架构示意" class="headerlink" title="2.1 架构示意"></a>2.1 架构示意</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">玩家进程 ←→ 玩家信息 ETS（同步更新、访问玩家数据）</span><br><span class="line">    ↓</span><br><span class="line">mysql 数据库（定时读库、定时写库）</span><br><span class="line"></span><br><span class="line">玩法功能 → 玩家进程（访问离线玩家数据）</span><br><span class="line">玩法功能 → mysql（访问数据库、定时读写）</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-运行机制"><a href="#2-2-运行机制" class="headerlink" title="2.2 运行机制"></a>2.2 运行机制</h3><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>服务器启动</strong></td>
+<td>功能业务从数据库加载数据，缓存到 ETS 或进程字典；业务维护修改标志；功能进程每 30 分钟持久化变更数据</td>
+</tr>
+<tr>
+<td><strong>玩家登录</strong></td>
+<td>加载玩家全部功能数据到玩家进程 state，同步 state 数据块到 <code>ets_online</code>；玩家功能维护 state 与修改标志；玩家进程每 30 分钟持久化变更；非玩家业务通过 <code>ets_online</code> 访问在线玩家数据</td>
+</tr>
+<tr>
+<td><strong>玩家下线</strong></td>
+<td>持久化玩家变更数据，删除 <code>ets_online</code> 中该玩家数据；非玩家业务直接访问数据库</td>
+</tr>
+</tbody></table>
+<h3 id="2-3-优缺点"><a href="#2-3-优缺点" class="headerlink" title="2.3 优缺点"></a>2.3 优缺点</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>优点</strong></td>
+<td>内存占用小；完整玩家 state 数据块保证消息处理原子性</td>
+</tr>
+<tr>
+<td><strong>缺点</strong></td>
+<td>业务实现复杂，需维护数据修改与持久化逻辑；访问离线玩家数据 I&#x2F;O 压力大；业务模块间因冗余玩家数据而耦合增加</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="三、缓存设计二：mnesia-缓存管理进程-超时回收"><a href="#三、缓存设计二：mnesia-缓存管理进程-超时回收" class="headerlink" title="三、缓存设计二：mnesia + 缓存管理进程 + 超时回收"></a>三、缓存设计二：mnesia + 缓存管理进程 + 超时回收</h2><h3 id="3-1-架构示意"><a href="#3-1-架构示意" class="headerlink" title="3.1 架构示意"></a>3.1 架构示意</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">玩家进程 ←→ mnesia 缓存（玩家登录请求数据、定时对比更新进程字典）</span><br><span class="line">功能进程 ←→ mnesia 缓存（请求缓存数据、对比并更新缓存数据）</span><br><span class="line">mnesia 缓存 ←→ mysql（缓存未命中加载、同步持久化变化数据）</span><br><span class="line">缓存管理进程 → mysql（删除超时缓存）</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-运行机制"><a href="#3-2-运行机制" class="headerlink" title="3.2 运行机制"></a>3.2 运行机制</h3><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>服务器启动</strong></td>
+<td>为每张数据表创建对应 mnesia 内存表；需常驻的表预加载；访问时未命中则从数据库加载到 mnesia 再返回，并为数据 key 添加超时时间戳交给缓存定时器管理；更新时与 mnesia 缓存对比（无则先加载），判断新增或更新后同步到数据库并更新超时时间戳；超时（如 1 小时）后，缓存管理进程从 mnesia 删除对应 key</td>
+</tr>
+<tr>
+<td><strong>玩家登录</strong></td>
+<td>玩家数据导入进程字典；玩家进程每 30 分钟与缓存对比并同步更新到数据库；非玩家业务从 mnesia 缓存访问，未命中则从表加载</td>
+</tr>
+<tr>
+<td><strong>玩家下线</strong></td>
+<td>需持久化的数据同步到缓存和数据库；访问玩家数据时走 mnesia 缓存（未命中则加载并加入超时定时器）</td>
+</tr>
+</tbody></table>
+<h3 id="3-3-复合主键加载管理"><a href="#3-3-复合主键加载管理" class="headerlink" title="3.3 复合主键加载管理"></a>3.3 复合主键加载管理</h3><ul>
+<li>复合主键表在 mnesia 中建为 <code>bag</code> 类型</li>
+<li>加载时仅能用第一个主键加载该 key 下的全部数据</li>
+<li>写入时通过复合 key 对比判断新增或更新</li>
+</ul>
+<h3 id="3-4-优缺点"><a href="#3-4-优缺点" class="headerlink" title="3.4 优缺点"></a>3.4 优缺点</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>优点</strong></td>
+<td>业务开发简单，无需关心加载与持久化；超时机制可回收冷数据，降低内存</td>
+</tr>
+<tr>
+<td><strong>缺点</strong></td>
+<td>在线玩家缓存非实时，部分业务可能不满足</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、缓存设计三：mnesia-表订阅进程"><a href="#四、缓存设计三：mnesia-表订阅进程" class="headerlink" title="四、缓存设计三：mnesia + 表订阅进程"></a>四、缓存设计三：mnesia + 表订阅进程</h2><h3 id="4-1-架构示意"><a href="#4-1-架构示意" class="headerlink" title="4.1 架构示意"></a>4.1 架构示意</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mnesia 表 ←→ 表订阅进程 1/2/3（数据更新、数据更新事件）</span><br><span class="line">mnesia 表 ←→ 玩家进程（请求缓存、数据更新）</span><br><span class="line">mnesia 表 ←→ mysql（加载未命中数据到缓存）</span><br><span class="line">表订阅进程 → mysql（定时持久化事件数据）</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-2-运行机制"><a href="#4-2-运行机制" class="headerlink" title="4.2 运行机制"></a>4.2 运行机制</h3><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>服务器启动</strong></td>
+<td>为每张数据表创建 mnesia 内存表；每张表启动「修改订阅进程」和「持久化进程」；修改订阅进程定期（如 10 分钟）对数据更新做持久化；数据访问需先手动加载到 mnesia 再访问；数据更新写入 mnesia 后发送给表订阅进程，订阅进程常做数据更新合并</td>
+</tr>
+<tr>
+<td><strong>玩家登录</strong></td>
+<td>玩家数据加载到 mnesia 缓存和玩家进程字典；更新时同步更新进程字典与 mnesia，并将更新操作发送给订阅进程；通过加载 mnesia 缓存访问玩家数据</td>
+</tr>
+</tbody></table>
+<h3 id="4-3-复合组件加载"><a href="#4-3-复合组件加载" class="headerlink" title="4.3 复合组件加载"></a>4.3 复合组件加载</h3><ul>
+<li>复合组件加载时，为每张表增加唯一 ID 字段作为主键，插入时生成新 ID</li>
+</ul>
+<h3 id="4-4-优缺点"><a href="#4-4-优缺点" class="headerlink" title="4.4 优缺点"></a>4.4 优缺点</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>优点</strong></td>
+<td>业务开发简单；无需关系数据加载与持久化；数据缓存与操作合并减少大量磁盘 I&#x2F;O；表订阅进程可灵活调整缓存方式，提高项目适应性</td>
+</tr>
+<tr>
+<td><strong>缺点</strong></td>
+<td>数据加载后不回收，内存随运行时间增长</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="五、缓存设计四：表缓存进程-持久化进程"><a href="#五、缓存设计四：表缓存进程-持久化进程" class="headerlink" title="五、缓存设计四：表缓存进程 + 持久化进程"></a>五、缓存设计四：表缓存进程 + 持久化进程</h2><h3 id="5-1-架构示意"><a href="#5-1-架构示意" class="headerlink" title="5.1 架构示意"></a>5.1 架构示意</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">玩家进程 / 功能进程</span><br><span class="line">    ↓ 同步请求数据 / 业务层请求数据</span><br><span class="line">表1缓存进程、表2缓存进程</span><br><span class="line">    ↓ 业务层请求数据、更新数据</span><br><span class="line">mnesia 缓存 ←→ 数据库（加载缓存未命中数据）</span><br><span class="line">mnesia 缓存 → 持久化进程（更新数据同步）</span><br><span class="line">持久化进程 → 数据库（定时持久化数据更新）</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-运行机制"><a href="#5-2-运行机制" class="headerlink" title="5.2 运行机制"></a>5.2 运行机制</h3><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>服务器启动</strong></td>
+<td>为每张数据表启动缓存进程和持久化进程；常驻内存表数据预加载；数据访问通过 <code>call</code> 缓存进程；未命中则从数据库加载到缓存表；数据更新时 <code>call</code> 缓存进程，未命中则先加载再更新，并同步到持久化进程；持久化进程定期将变更写入数据库</td>
+</tr>
+<tr>
+<td><strong>玩家登录</strong></td>
+<td>直接与 mnesia 缓存数据交互</td>
+</tr>
+<tr>
+<td><strong>复合主键加载</strong></td>
+<td>加载时按第一个主键加载该 key 下全部数据；缓存进程维护该主键下已加载的数据 key 列表；后续访问可基于该列表查询</td>
+</tr>
+</tbody></table>
+<h3 id="5-3-优缺点"><a href="#5-3-优缺点" class="headerlink" title="5.3 优缺点"></a>5.3 优缺点</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>优点</strong></td>
+<td>业务开发简单，无需手动处理关系数据加载与持久化；数据缓存与操作合并显著减少磁盘 I&#x2F;O；缓存在数据中心核心服务内部署，不影响访问性能</td>
+</tr>
+<tr>
+<td><strong>缺点</strong></td>
+<td>数据加载后若变冷不会自动回收，长时间运行内存会增长</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="六、四种设计对比"><a href="#六、四种设计对比" class="headerlink" title="六、四种设计对比"></a>六、四种设计对比</h2><table>
+<thead>
+<tr>
+<th>设计</th>
+<th>核心存储</th>
+<th>持久化方式</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>设计一</td>
+<td>玩家 state + ETS</td>
+<td>玩家&#x2F;功能进程定时写库</td>
+<td>在线玩家为主，对原子性要求高</td>
+</tr>
+<tr>
+<td>设计二</td>
+<td>mnesia</td>
+<td>缓存管理 + 超时删除</td>
+<td>需冷热分离、内存可控</td>
+</tr>
+<tr>
+<td>设计三</td>
+<td>mnesia + 表订阅</td>
+<td>表订阅进程定时持久化</td>
+<td>需灵活缓存策略、减少 I&#x2F;O</td>
+</tr>
+<tr>
+<td>设计四</td>
+<td>表缓存进程 + mnesia</td>
+<td>独立持久化进程</td>
+<td>多表、需统一缓存与持久化</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="七、选型建议"><a href="#七、选型建议" class="headerlink" title="七、选型建议"></a>七、选型建议</h2><ul>
+<li><strong>小规模、强一致性</strong>：设计一，state 原子性好</li>
+<li><strong>中大规模、内存敏感</strong>：设计二，超时回收冷数据</li>
+<li><strong>高 I&#x2F;O 压力</strong>：设计三、四，合并缓存与持久化</li>
+<li><strong>多表、统一管理</strong>：设计四，表级缓存进程清晰</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="陈志伟 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="陈志伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>陈志伟
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2025/11/05/Erlang%E6%B8%B8%E6%88%8F%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1/" title="Erlang 游戏服务器缓存设计">http://example.com/2025/11/05/Erlang游戏服务器缓存设计/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>post.copyright.license_content
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/17/inetpacket/" rel="prev" title="inetpacket">
+      <i class="fa fa-chevron-left"></i> inetpacket
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/11/08/erlang-timer/" rel="next" title="Erlang 定时器">
+      Erlang 定时器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81Erlang-%E5%B8%B8%E7%94%A8%E7%BC%93%E5%AD%98%E6%96%B9%E5%BC%8F"><span class="nav-number">1.1.</span> <span class="nav-text">一、Erlang 常用缓存方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1%E4%B8%80%EF%BC%9A%E7%8E%A9%E5%AE%B6%E8%BF%9B%E7%A8%8B-ETS-%E5%AE%9A%E6%97%B6%E8%AF%BB%E5%86%99"><span class="nav-number">1.2.</span> <span class="nav-text">二、缓存设计一：玩家进程 + ETS + 定时读写</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E6%9E%B6%E6%9E%84%E7%A4%BA%E6%84%8F"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.1 架构示意</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.2 运行机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.3 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1%E4%BA%8C%EF%BC%9Amnesia-%E7%BC%93%E5%AD%98%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B-%E8%B6%85%E6%97%B6%E5%9B%9E%E6%94%B6"><span class="nav-number">1.3.</span> <span class="nav-text">三、缓存设计二：mnesia + 缓存管理进程 + 超时回收</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E6%9E%B6%E6%9E%84%E7%A4%BA%E6%84%8F"><span class="nav-number">1.3.1.</span> <span class="nav-text">3.1 架构示意</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">1.3.2.</span> <span class="nav-text">3.2 运行机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E5%A4%8D%E5%90%88%E4%B8%BB%E9%94%AE%E5%8A%A0%E8%BD%BD%E7%AE%A1%E7%90%86"><span class="nav-number">1.3.3.</span> <span class="nav-text">3.3 复合主键加载管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.3.4.</span> <span class="nav-text">3.4 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1%E4%B8%89%EF%BC%9Amnesia-%E8%A1%A8%E8%AE%A2%E9%98%85%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.4.</span> <span class="nav-text">四、缓存设计三：mnesia + 表订阅进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-%E6%9E%B6%E6%9E%84%E7%A4%BA%E6%84%8F"><span class="nav-number">1.4.1.</span> <span class="nav-text">4.1 架构示意</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">1.4.2.</span> <span class="nav-text">4.2 运行机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-%E5%A4%8D%E5%90%88%E7%BB%84%E4%BB%B6%E5%8A%A0%E8%BD%BD"><span class="nav-number">1.4.3.</span> <span class="nav-text">4.3 复合组件加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.4.4.</span> <span class="nav-text">4.4 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1%E5%9B%9B%EF%BC%9A%E8%A1%A8%E7%BC%93%E5%AD%98%E8%BF%9B%E7%A8%8B-%E6%8C%81%E4%B9%85%E5%8C%96%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.5.</span> <span class="nav-text">五、缓存设计四：表缓存进程 + 持久化进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E6%9E%B6%E6%9E%84%E7%A4%BA%E6%84%8F"><span class="nav-number">1.5.1.</span> <span class="nav-text">5.1 架构示意</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">1.5.2.</span> <span class="nav-text">5.2 运行机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.5.3.</span> <span class="nav-text">5.3 优缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%9B%9B%E7%A7%8D%E8%AE%BE%E8%AE%A1%E5%AF%B9%E6%AF%94"><span class="nav-number">1.6.</span> <span class="nav-text">六、四种设计对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E9%80%89%E5%9E%8B%E5%BB%BA%E8%AE%AE"><span class="nav-number">1.7.</span> <span class="nav-text">七、选型建议</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陈志伟</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.suexcxine.win/" title="http:&#x2F;&#x2F;blog.suexcxine.win&#x2F;" rel="noopener" target="_blank">Suex_Cxine</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/zhongwencool/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;zhongwencool&#x2F;" rel="noopener" target="_blank">zhongwen</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈志伟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

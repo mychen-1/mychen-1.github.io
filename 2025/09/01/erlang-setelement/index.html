@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述神奇发现– 按照升序倒序使用，效率居然不一样">
+<meta property="og:type" content="article">
+<meta property="og:title" content="setelement接口">
+<meta property="og:url" content="http://example.com/2025/09/01/erlang-setelement/index.html">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="概述神奇发现– 按照升序倒序使用，效率居然不一样">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-01T03:35:21.000Z">
+<meta property="article:modified_time" content="2026-03-09T07:12:04.412Z">
+<meta property="article:author" content="陈志伟">
+<meta property="article:tag" content="adawdawd">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/01/erlang-setelement/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>setelement接口 | 陈志伟`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">陈志伟`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/01/erlang-setelement/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陈志伟">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="陈志伟`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          setelement接口
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2025-09-01 11:35:21" itemprop="dateCreated datePublished" datetime="2025-09-01T11:35:21+08:00">2025-09-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-03-09 15:12:04" itemprop="dateModified" datetime="2026-03-09T15:12:04+08:00">2026-03-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>神奇发现– 按照升序倒序使用，效率居然不一样</p>
+<span id="more"></span>
+
+<h3 id="1-文档"><a href="#1-文档" class="headerlink" title="1.文档"></a>1.文档</h3><p>在官方文档中有一个有趣现象， 升序和降序调用效率居然会不一样。</p>
+<p>文档大致意思， 使用降序， 只会拷贝几次元组。但是升序每次执行都会。  </p>
+<h3 id="2-写测试案例。"><a href="#2-写测试案例。" class="headerlink" title="2.写测试案例。"></a>2.写测试案例。</h3><p>从图可以看出， 升序比降序慢一倍左右。  去看一下 setelement源码</p>
+<p>看得出 每次setelement都会拷贝， 那降序怎么做到的呢?   百思不得其解。 突然想到可以看 编译的汇编语言。</p>
+<h3 id="3-查看汇编"><a href="#3-查看汇编" class="headerlink" title="3.查看汇编"></a>3.查看汇编</h3><p>命令 ：c(mod, [‘S’]).</p>
+<p>从图中可以看到 test 和 test1生成汇编明显不一样。 细看区别。</p>
+<p>降序test， 前面调用2次 setelement 后面 是用 set_tuple_element.</p>
+<p>升序test1每次执行 都是setelement。</p>
+<p>看set_tuple_element源码：</p>
+<p>直接将下表指针地址的值覆盖。效率 	O（1）, 无内存开辟。</p>
+<p>（这里也知道， erlang元组的连续空间实现， 是用了一层列表里面是指针， 指针连续， 值分散）</p>
+<p>这里就豁然开朗了。</p>
+<h3 id="3-总结。"><a href="#3-总结。" class="headerlink" title="3.总结。"></a>3.总结。</h3><p>erlang元组连续实现原理， 由一个块连续的地址实现。</p>
+<p>升序 ，每次调用c层 setelement</p>
+<p>降序，前2次调用 setelement， 后续都是调用 set_tuple_element.</p>
+<p>ps:后续erlang26版本， 官方文档没有这个了。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="陈志伟 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="陈志伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>陈志伟
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2025/09/01/erlang-setelement/" title="setelement接口">http://example.com/2025/09/01/erlang-setelement/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>post.copyright.license_content
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/08/24/astar/" rel="prev" title="Erlang实现A星寻路">
+      <i class="fa fa-chevron-left"></i> Erlang实现A星寻路
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/09/erlang-%E7%BC%96%E8%AF%91/" rel="next" title="erlang 编译">
+      erlang 编译 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%96%87%E6%A1%A3"><span class="nav-number">1.0.1.</span> <span class="nav-text">1.文档</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%86%99%E6%B5%8B%E8%AF%95%E6%A1%88%E4%BE%8B%E3%80%82"><span class="nav-number">1.0.2.</span> <span class="nav-text">2.写测试案例。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%9F%A5%E7%9C%8B%E6%B1%87%E7%BC%96"><span class="nav-number">1.0.3.</span> <span class="nav-text">3.查看汇编</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%80%BB%E7%BB%93%E3%80%82"><span class="nav-number">1.0.4.</span> <span class="nav-text">3.总结。</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陈志伟</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.suexcxine.win/" title="http:&#x2F;&#x2F;blog.suexcxine.win&#x2F;" rel="noopener" target="_blank">Suex_Cxine</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/zhongwencool/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;zhongwencool&#x2F;" rel="noopener" target="_blank">zhongwen</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈志伟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

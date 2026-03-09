@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述erlang:port_ commandSgen_tcp:listen的options介绍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="erlang port与lister介绍">
+<meta property="og:url" content="http://example.com/2026/11/09/erlang-port%E4%B8%8Elister%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:site_name" content="陈志伟&#96;s Blog">
+<meta property="og:description" content="概述erlang:port_ commandSgen_tcp:listen的options介绍">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-11-09T03:42:44.000Z">
+<meta property="article:modified_time" content="2026-03-09T07:11:59.599Z">
+<meta property="article:author" content="陈志伟">
+<meta property="article:tag" content="adawdawd">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2026/11/09/erlang-port%E4%B8%8Elister%E4%BB%8B%E7%BB%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>erlang port与lister介绍 | 陈志伟`s Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">陈志伟`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/11/09/erlang-port%E4%B8%8Elister%E4%BB%8B%E7%BB%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陈志伟">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="陈志伟`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          erlang port与lister介绍
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2026-11-09 11:42:44" itemprop="dateCreated datePublished" datetime="2026-11-09T11:42:44+08:00">2026-11-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-03-09 15:11:59" itemprop="dateModified" datetime="2026-03-09T15:11:59+08:00">2026-03-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Erlang/" itemprop="url" rel="index"><span itemprop="name">Erlang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>erlang:port_ commandSgen_tcp:listen的options介绍</p>
+<span id="more"></span>
+
+<p>该篇主要总结 erlang:port_ commandSgen_tcp:listen的options。</p>
+<h2 id="举例："><a href="#举例：" class="headerlink" title="举例："></a>举例：</h2><h2 id="1-sender-server有一个逻辑：大概是-100ms内进程自己缓存协议Bin-100ms之后再调用erlang-port-command-force-把缓存的所有协议分批发送。"><a href="#1-sender-server有一个逻辑：大概是-100ms内进程自己缓存协议Bin-100ms之后再调用erlang-port-command-force-把缓存的所有协议分批发送。" class="headerlink" title="1.sender_server有一个逻辑：大概是 100ms内进程自己缓存协议Bin,100ms之后再调用erlang:port_command(force)把缓存的所有协议分批发送。"></a>1.sender_server有一个逻辑：大概是 100ms内进程自己缓存协议Bin,100ms之后再调用erlang:port_command(force)把缓存的所有协议分批发送。</h2><p>逻辑含义 每隔100ms将所有bin使用erlang:port_command(force)发送。<br>    优点：将多个数据合并到一起，减少系统调用次数、小数据包<br>    注意点：正常情况下发送数据有100ms延迟。</p>
+<h3 id="2-那force是作用是什么，以及npsuspend"><a href="#2-那force是作用是什么，以及npsuspend" class="headerlink" title="2.那force是作用是什么，以及npsuspend?"></a>2.那force是作用是什么，以及npsuspend?</h3><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">force:</span><br><span class="line">The calling process is not suspended if the port is busy, instead the port command is forced through. The call fails with a notsup exception if the driver of the port does not support this. For more information, see driver flag ERL_DRV_FLAG_SOFT_BUSY. nosuspend:</span><br><span class="line">The calling process is not suspended if the port is busy, instead the port command is aborted and false is returned.</span><br></pre></td></tr></table></figure>
+
+<p>force：当端口busy时，强理制塞入数据。可能会返回notsup，是驱动程序没有设置ERL_DRV_FLAG-SOFT_BUSY。<br>nosuspend：当端口busy时，不被挂起，直接返回false。<br>源码<br>D:lotp-OTP-25.3.2.20lerts\emulator\beam\erl_bif_port.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">BIF_RETTYPE <span class="title function_">erts_internal_port_command_3</span> <span class="params">(IF_ALIST_3)</span></span><br><span class="line">&#123;</span><br><span class="line">    BIF_RETTYPE res;</span><br><span class="line">	Port <span class="meta">#prt;</span></span><br><span class="line">	<span class="type">int</span> flags = <span class="number">0</span>;</span><br><span class="line">	<span class="type">erts_aint32_t</span> state;</span><br><span class="line">    <span class="keyword">if</span> (car == am_force)&#123;</span><br><span class="line">	f1ags <span class="number">1</span>= ERTS_ PORT_SIG_FLG_ FORCE;$<span class="number">6</span>% 将Flags设置状态位。</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (car == am_nosuspend)</span><br><span class="line">	flags |= ERTS_PORT_SIG_FLG_NOSUSPEND:</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">	BIF_RET(am_badopt);</span><br><span class="line">	&#125; = CDR (cons);</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-那什么时候会端口busy呢？"><a href="#3-那什么时候会端口busy呢？" class="headerlink" title="3.那什么时候会端口busy呢？"></a>3.那什么时候会端口busy呢？</h2><p>inet:setopts中有一个参数 thigh watermark, Size)。 当erlang驱区动队列大小大于该國值时，状态里新为busy，默认是8kb，</p>
+<h4 id="3-2扩展recbuf-和-sndbuf"><a href="#3-2扩展recbuf-和-sndbuf" class="headerlink" title="3.2扩展recbuf 和 sndbuf"></a>3.2扩展recbuf 和 sndbuf</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">我们启动port会设置一下options參数：</span><br><span class="line">gen_tcp:listen(Port, ?TCP_OPTS)</span><br><span class="line"><span class="number">98</span>% 启动端口监听</span><br><span class="line">-define (TCP_OPTS, [</span><br><span class="line">binary,</span><br><span class="line">&#123;active, <span class="literal">false</span>&#125;, &#123;delay_send, <span class="literal">false</span>&#125;, &#123;nodelay, <span class="literal">true</span>&#125;, &#123;send _timeout, <span class="number">8000</span>&#125;, &#123;recbuf, <span class="number">65536</span>&#125;, &#123;sndbuf, <span class="number">65536</span>&#125;</span><br><span class="line">%% 会影响buffer的大小</span><br><span class="line">].</span><br></pre></td></tr></table></figure>
+
+<p>在TCP_OPTS有2个参数：<br>    1.recbuf:接收池大小<br>    2.sndbuf:：发送池大小<br>这2个参数是作用于操作系统，作用于客户端。</p>
+<h3 id="4-根据第2-3点总结流程："><a href="#4-根据第2-3点总结流程：" class="headerlink" title="4.根据第2.3点总结流程："></a>4.根据第2.3点总结流程：</h3><p>1.调用erlang:port_command(force).<br>2.erlbif_port.c 中erts_internal_port_command_ 3将flags设置状态位。</p>
+<p>注意：过度使用force：可能导致接受缓冲区无限增长。</p>
+<h3 id="5-farce与-nosuspend搭配："><a href="#5-farce与-nosuspend搭配：" class="headerlink" title="5.farce与 nosuspend搭配："></a>5.farce与 nosuspend搭配：</h3><table>
+<thead>
+<tr>
+<th align="center">选项</th>
+<th>缓冲池空闲</th>
+<th>缓冲区busy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">force</td>
+<td>写入成功</td>
+<td>强制写入</td>
+</tr>
+<tr>
+<td align="center">nosuspend</td>
+<td>写入成功</td>
+<td>失败</td>
+</tr>
+<tr>
+<td align="center">force + nosuspend</td>
+<td>写入成功</td>
+<td>强制写入</td>
+</tr>
+</tbody></table>
+<h3 id="6-扩展：其他参数-delay-send-nodelay-send-timeout-send-timeout-close"><a href="#6-扩展：其他参数-delay-send-nodelay-send-timeout-send-timeout-close" class="headerlink" title="6.扩展：其他参数 delay_send,nodelay, send_timeout,send _timeout_close"></a>6.扩展：其他参数 delay_send,nodelay, send_timeout,send _timeout_close</h3><p>这三个参数都是gen_tcp:listen(Options) 文档介绍可以看 inet:’setopts.<br><strong>delay send</strong>：启用延迟发送，即数据会先被放入发送缓冲区，直到缓冲区满或显式刷新。注意，即使设置了<br>idelay_send，true}，如果同时设置了 Enodelay，true}，那么延迟发送可能会被覆盖，因为 nodelay 会禁用缓冲延迟。<br><strong>nodelay</strong>：禁用Nagle算法，即每次写入的数据都会立即发送，不等待缓冲区填满或延迟确认。<br><strong>send timeout</strong>：发送超时时间，从调用send开始，到erlang虚拟机缓冲区全部接受完结束。超时返回{error,timeout.当超时时，无法确定数据包有多少数据发送成功。<br>（即发出是加载到erlang虚拟机缓冲区）<br>**send timeout close;**超出是否关闭套接字。默认false</p>
+<h4 id="6-1-delay-send-与-send-timeout同時使用效果。"><a href="#6-1-delay-send-与-send-timeout同時使用效果。" class="headerlink" title="6.1 delay_send 与 send timeout同時使用效果。"></a>6.1 delay_send 与 send timeout同時使用效果。</h4><p>delay <em>send是作用于检测阈值，将erlang虚拟机驱动队列数据发送到操作系統， send</em> timeout是作用数据从gen_tcp:send到erlang虚拟机驱动队列的超时时间，其实并无交集。</p>
+<h2 id="7-第一点问题。"><a href="#7-第一点问题。" class="headerlink" title="7.第一点问题。"></a>7.第一点问题。</h2><h3 id="7-1-tcp有个delay-send的options，-如果delay-send设置为true，-是否有同样效果？"><a href="#7-1-tcp有个delay-send的options，-如果delay-send设置为true，-是否有同样效果？" class="headerlink" title="7.1:tcp有个delay_ send的options， 如果delay_send设置为true， 是否有同样效果？"></a>7.1:tcp有个delay_ send的options， 如果delay_send设置为true， 是否有同样效果？</h3><p>答：delay_ send是将发送数据放入erlang虚拟机驱动队列中，<br>当达到阈值吋（阈值与 sndbuf大小景密相关），<br>将数据推送到操作系统。</p>
+<p>效果：都可以缓存数据包，但是底层发送时机不同。delay_send是缓存池满，第一点是100ms。</p>
+<h3 id="7-2这里为什么还要分批调用erlangport-command-【Force】-–这里又sleep了5ms"><a href="#7-2这里为什么还要分批调用erlangport-command-【Force】-–这里又sleep了5ms" class="headerlink" title="7.2这里为什么还要分批调用erlangport_ command 【Force】 ?–这里又sleep了5ms."></a>7.2这里为什么还要分批调用erlangport_ command 【Force】 ?–这里又sleep了5ms.</h3><p>erlang:port. command是干啥的，调用了之后网络就会立刻发送协议给客户端了吗？这里再停5ms的作用是什么？<br>分批发送：100ms积累的数据有可能很大，一次发送大数据可能导致占用大星内存、阻塞其他信息。<br>发送到客户端：只是放入erlang区动队列，何时发送还是靠erlang虛扒机与操作系統共同完成的。<br>停5ms：尽星使erlang驱动队列消耗完，平滑发送。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="陈志伟 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="陈志伟 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>陈志伟
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2026/11/09/erlang-port%E4%B8%8Elister%E4%BB%8B%E7%BB%8D/" title="erlang port与lister介绍">http://example.com/2026/11/09/erlang-port与lister介绍/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>post.copyright.license_content
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/10/12/erlang-node/" rel="prev" title="erlang节点-分布式">
+      <i class="fa fa-chevron-left"></i> erlang节点-分布式
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BE%E4%BE%8B%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">举例：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-sender-server%E6%9C%89%E4%B8%80%E4%B8%AA%E9%80%BB%E8%BE%91%EF%BC%9A%E5%A4%A7%E6%A6%82%E6%98%AF-100ms%E5%86%85%E8%BF%9B%E7%A8%8B%E8%87%AA%E5%B7%B1%E7%BC%93%E5%AD%98%E5%8D%8F%E8%AE%AEBin-100ms%E4%B9%8B%E5%90%8E%E5%86%8D%E8%B0%83%E7%94%A8erlang-port-command-force-%E6%8A%8A%E7%BC%93%E5%AD%98%E7%9A%84%E6%89%80%E6%9C%89%E5%8D%8F%E8%AE%AE%E5%88%86%E6%89%B9%E5%8F%91%E9%80%81%E3%80%82"><span class="nav-number">1.2.</span> <span class="nav-text">1.sender_server有一个逻辑：大概是 100ms内进程自己缓存协议Bin,100ms之后再调用erlang:port_command(force)把缓存的所有协议分批发送。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%82%A3force%E6%98%AF%E4%BD%9C%E7%94%A8%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E4%BB%A5%E5%8F%8Anpsuspend"><span class="nav-number">1.2.1.</span> <span class="nav-text">2.那force是作用是什么，以及npsuspend?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E9%82%A3%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%BC%9A%E7%AB%AF%E5%8F%A3busy%E5%91%A2%EF%BC%9F"><span class="nav-number">1.3.</span> <span class="nav-text">3.那什么时候会端口busy呢？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2%E6%89%A9%E5%B1%95recbuf-%E5%92%8C-sndbuf"><span class="nav-number">1.3.0.1.</span> <span class="nav-text">3.2扩展recbuf 和 sndbuf</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%A0%B9%E6%8D%AE%E7%AC%AC2-3%E7%82%B9%E6%80%BB%E7%BB%93%E6%B5%81%E7%A8%8B%EF%BC%9A"><span class="nav-number">1.3.1.</span> <span class="nav-text">4.根据第2.3点总结流程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-farce%E4%B8%8E-nosuspend%E6%90%AD%E9%85%8D%EF%BC%9A"><span class="nav-number">1.3.2.</span> <span class="nav-text">5.farce与 nosuspend搭配：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E6%89%A9%E5%B1%95%EF%BC%9A%E5%85%B6%E4%BB%96%E5%8F%82%E6%95%B0-delay-send-nodelay-send-timeout-send-timeout-close"><span class="nav-number">1.3.3.</span> <span class="nav-text">6.扩展：其他参数 delay_send,nodelay, send_timeout,send _timeout_close</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#6-1-delay-send-%E4%B8%8E-send-timeout%E5%90%8C%E6%99%82%E4%BD%BF%E7%94%A8%E6%95%88%E6%9E%9C%E3%80%82"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">6.1 delay_send 与 send timeout同時使用效果。</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E7%AC%AC%E4%B8%80%E7%82%B9%E9%97%AE%E9%A2%98%E3%80%82"><span class="nav-number">1.4.</span> <span class="nav-text">7.第一点问题。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-tcp%E6%9C%89%E4%B8%AAdelay-send%E7%9A%84options%EF%BC%8C-%E5%A6%82%E6%9E%9Cdelay-send%E8%AE%BE%E7%BD%AE%E4%B8%BAtrue%EF%BC%8C-%E6%98%AF%E5%90%A6%E6%9C%89%E5%90%8C%E6%A0%B7%E6%95%88%E6%9E%9C%EF%BC%9F"><span class="nav-number">1.4.1.</span> <span class="nav-text">7.1:tcp有个delay_ send的options， 如果delay_send设置为true， 是否有同样效果？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2%E8%BF%99%E9%87%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E8%A6%81%E5%88%86%E6%89%B9%E8%B0%83%E7%94%A8erlangport-command-%E3%80%90Force%E3%80%91-%E2%80%93%E8%BF%99%E9%87%8C%E5%8F%88sleep%E4%BA%865ms"><span class="nav-number">1.4.2.</span> <span class="nav-text">7.2这里为什么还要分批调用erlangport_ command 【Force】 ?–这里又sleep了5ms.</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陈志伟</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://alex-mcavoy.github.io/" title="https:&#x2F;&#x2F;alex-mcavoy.github.io&#x2F;" rel="noopener" target="_blank">Alex</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://feng19.com/" title="https:&#x2F;&#x2F;feng19.com&#x2F;" rel="noopener" target="_blank">在路上</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.posase.im/" title="https:&#x2F;&#x2F;www.posase.im&#x2F;" rel="noopener" target="_blank">posase</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/me-sa/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;me-sa&#x2F;" rel="noopener" target="_blank">坚强2002</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/skq777328?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;skq777328?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">balalanl7</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.ttalk.im/" title="https:&#x2F;&#x2F;www.ttalk.im&#x2F;" rel="noopener" target="_blank">David_Gao</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/leeyisoft?type=blog" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;leeyisoft?type&#x3D;blog" rel="noopener" target="_blank">李燚</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://naupio.com/" title="https:naupio.com&#x2F;" rel="noopener" target="_blank">Naupio</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.yufeng.info/" title="https:&#x2F;&#x2F;blog.yufeng.info&#x2F;" rel="noopener" target="_blank">淘宝褚霸_余锋</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.codingnow.com/" title="https:&#x2F;&#x2F;blog.codingnow.com&#x2F;" rel="noopener" target="_blank">云风</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/jianru-lin/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;jianru-lin&#x2F;" rel="noopener" target="_blank">林建入</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.zhihu.com/people/qing-liang/" title="https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;qing-liang&#x2F;" rel="noopener" target="_blank">庆亮</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/wp1027322856?type=blog/" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;wp1027322856?type&#x3D;blog&#x2F;" rel="noopener" target="_blank">wp1027322856</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://cwqqq.com/" title="http:&#x2F;&#x2F;cwqqq.com&#x2F;" rel="noopener" target="_blank">没有开花的树</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://blog.suexcxine.win/" title="http:&#x2F;&#x2F;blog.suexcxine.win&#x2F;" rel="noopener" target="_blank">Suex_Cxine</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.cnblogs.com/zhongwencool/" title="https:&#x2F;&#x2F;www.cnblogs.com&#x2F;zhongwencool&#x2F;" rel="noopener" target="_blank">zhongwen</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陈志伟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
